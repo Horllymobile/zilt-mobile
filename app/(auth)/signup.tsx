@@ -1,8 +1,7 @@
-import { useAuthStore } from "@/libs/store/authStore";
 import { supabase } from "@/libs/superbase";
 import { router } from "expo-router";
 import { Eye, EyeOff, Loader2 } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Alert,
   Dimensions,
@@ -24,11 +23,7 @@ export default function SignUp() {
   const [isLoading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const { setAuthData, session } = useAuthStore();
-
-  useEffect(() => {
-    console.log(session);
-  }, [session]);
+  // const { session } = useAuthStore();
 
   const handleSubmit = async () => {
     console.log(email, password);
@@ -39,13 +34,13 @@ export default function SignUp() {
     });
     setLoading(false);
 
-    console.log(auth);
-
-    if (auth.data.user?.confirmation_sent_at) {
-      Alert.alert("Verify", "Check your mail to verify");
+    if (auth.error) {
+      Alert.alert(auth.error.message);
+    } else {
+      if (auth.data.user?.confirmation_sent_at) {
+        Alert.alert("Verify", "Check your mail to verify");
+      }
     }
-
-    // router.push("/main/(dashboard)");
   };
   return (
     <View

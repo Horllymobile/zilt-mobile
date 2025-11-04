@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { Eye, EyeOff, Loader2 } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
+  Alert,
   Dimensions,
   Image,
   Platform,
@@ -30,7 +31,6 @@ export default function Login() {
   }, [session]);
 
   const handleSubmit = async () => {
-    console.log(email, password);
     setLoading(true);
     supabase.auth.signInWithOtp({
       email,
@@ -39,13 +39,30 @@ export default function Login() {
       email: email,
       password: password,
     });
-    setLoading(false);
-    setAuthData({
-      session: auth.data.session,
-      user: auth.data.user,
-    });
 
-    router.push("/main/(dashboard)");
+    if (auth.error) {
+      Alert.alert(auth.error.message);
+    } else {
+      setAuthData({
+        session: auth.data.session,
+        user: auth.data.user,
+      });
+
+      supabase
+        .from("users")
+        .select("")
+        .eq("id", auth.data.user?.user_metadata?.sub)
+        .single()
+        .then((res) => {
+          console.log(res);
+          if (!res.data) {
+            router.navigate("/onboarding");
+          } else {
+            router.push("/main/(dashboard)");
+          }
+        });
+    }
+    setLoading(false);
   };
 
   return (
@@ -119,7 +136,7 @@ export default function Login() {
           <TouchableOpacity
             style={{
               position: "absolute",
-              top: 12,
+              top: 15,
               right: 5,
               display: "flex",
               justifyContent: "center",
@@ -172,7 +189,28 @@ export default function Login() {
       </TouchableHighlight>
 
       <TouchableHighlight
-        className="p-4 mt-5"
+        className="mt-2"
+        onPress={() => {
+          router.navigate("/(auth)/signup");
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 18,
+            fontWeight: "normal",
+            fontFamily: Platform.select({
+              android: "itim",
+              ios: "itim",
+            }),
+            color: "#2C057A",
+          }}
+        >
+          Forgot Password?
+        </Text>
+      </TouchableHighlight>
+
+      <TouchableHighlight
+        className="p-2 mt-3"
         onPress={() => {
           router.navigate("/(auth)/signup");
         }}

@@ -1,9 +1,10 @@
 import { useAuthStore } from "@/libs/store/authStore";
-import { router } from "expo-router";
+import { supabase } from "@/libs/superbase";
+import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
 import {
+  Alert,
   Dimensions,
-  Image,
   Platform,
   Text,
   TextInput,
@@ -11,8 +12,9 @@ import {
   View,
 } from "react-native";
 
-export default function Login() {
+export default async function Login() {
   const { width } = Dimensions.get("window");
+  const [imageUri, setImageUri] = useState<string>("");
 
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
@@ -20,10 +22,71 @@ export default function Login() {
   const [isLoading, setLoading] = useState(false);
   const { session, user } = useAuthStore();
 
-  const handleSubmit = async () => {
-    router.push("/main/(dashboard)");
+  // const openGallery = await launchImageLibrary({
+  //   mediaType: "photo",
+  //   quality: 1,
+  // });
 
-    //  supabase.from('user').
+  const [imageFile, setImageFile] = useState<string | null | undefined>(
+    undefined
+  );
+
+  const pickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+
+      if (!result.canceled) {
+        const asset = result.assets[0];
+        setImageUri(asset.uri);
+      }
+    } catch (err) {
+      console.error("Image picker error:", err);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!imageUri) {
+      Alert.alert("Please select an image first");
+      return;
+    }
+
+    try {
+      // ✅ Convert the URI to a blob (works in React Native)
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+
+      const filePath = `avatars/${Date.now()}.jpg`;
+
+      const { data, error } = await supabase.storage
+        .from("Zilt Storage") // your bucket name (no spaces)
+        .upload(filePath, blob, {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: "image/jpeg",
+        });
+
+      if (error) {
+        console.error("Upload error:", error);
+        Alert.alert("Upload failed", error.message);
+        return;
+      }
+
+      // ✅ Get public URL
+      const { data: publicUrl } = supabase.storage
+        .from("Zilt Storage")
+        .getPublicUrl(filePath);
+
+      console.log("Upload success:", publicUrl.publicUrl);
+      Alert.alert("Upload successful!", publicUrl.publicUrl);
+    } catch (err) {
+      console.error("Upload error:", err);
+      Alert.alert("Error uploading image");
+    }
   };
   return (
     <View
@@ -33,12 +96,36 @@ export default function Login() {
         alignItems: "center",
       }}
     >
-      <Image
-        source={require("../assets/images/icon.png")}
-        style={{ width: 109.09, height: 101.67, marginBottom: 20 }}
-        resizeMode="contain"
-      />
-
+      <Text style={{ fontSize: 24, marginBottom: 30 }}>Account Setup</Text>
+      {/* <TouchableOpacity onPress={() => pickImage()}>
+        <View
+          style={{
+            width: 150,
+            height: 150,
+            minHeight: 150,
+            minWidth: 150,
+            backgroundColor: "#fff",
+            borderWidth: 1,
+            borderRadius: 50,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          {!imageUri ? (
+            <ImageIcon size={34} />
+          ) : (
+            <Image
+              source={{ uri: imageUri }}
+              style={{
+                width: 150,
+                height: 150,
+                borderRadius: 50,
+              }}
+            />
+          )}
+        </View>
+      </TouchableOpacity> */}
       <View>
         <Text>Username</Text>
         <View
@@ -108,9 +195,7 @@ export default function Login() {
           borderRadius: 20,
         }}
         className="p-4 bg-[#2C057A] rounded-full"
-        onPress={() => {
-          router.navigate("/main/(dashboard)");
-        }}
+        onPress={handleSubmit}
       >
         <Text
           style={{
