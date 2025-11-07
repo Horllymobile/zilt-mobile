@@ -1,17 +1,41 @@
-import "@/global.css";
-import { useAuthStore } from "@/libs/store/authStore";
-import { Stack, useRouter, useSegments } from "expo-router";
+"use client";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Stack } from "expo-router";
+import { Suspense } from "react";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { Providers } from "../shared/providers";
 
+const queryClient = new QueryClient();
 export default function RootLayout() {
-  const router = useRouter();
-  const segments = useSegments(); // useful to check current route
-  const { session, user } = useAuthStore();
+  // const { session } = useAuthStore();
+  // const authToken = session?.token;
+  // useEffect(() => {
+  //   console.log("Socket Initialized");
+  //   if (authToken) {
+  //     socketService.connect(authToken);
 
-  // ✅ Always render the navigation tree
+  //     console.log(socketService.getSocket()?.id);
+
+  //     return () => {
+  //       socketService.disconnect();
+  //     };
+  //   }
+  // }, []);
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="main" />
-      <Stack.Screen name="splash" />
-    </Stack>
+    <Suspense>
+      <SafeAreaProvider>
+        <QueryClientProvider client={queryClient}>
+          <Providers>
+            <Stack
+              screenOptions={{ headerShown: false }}
+              initialRouteName="splash"
+            >
+              <Stack.Screen name="main" />
+              <Stack.Screen name="splash" />
+            </Stack>
+          </Providers>
+        </QueryClientProvider>
+      </SafeAreaProvider>
+    </Suspense>
   );
 }

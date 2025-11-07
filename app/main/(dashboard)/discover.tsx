@@ -1,17 +1,39 @@
-import { Compass, Search } from "lucide-react-native";
+"use client";
+import { COLORS } from "@/shared/constants/color";
+import { Search } from "lucide-react-native";
+import { useState } from "react";
 import {
   Dimensions,
+  StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { SceneMap, TabBar, TabView } from "react-native-tab-view";
+import Events from "../(discover)/events";
+import Moment from "../(discover)/moment";
+import People from "../(discover)/people";
 
+const initialLayout = { width: Dimensions.get("window").width };
 export default function Discover() {
   const { width } = Dimensions.get("window");
+  const [index, setIndex] = useState(0);
+  const [routes] = useState([
+    { key: "moment", title: "Zilt Moments" },
+    // { key: "feed", title: "Feed" },
+    { key: "people", title: "People" },
+    { key: "events", title: "Events" },
+  ]);
+
+  const renderScene = SceneMap({
+    people: People,
+    moment: Moment,
+    events: Events,
+  });
+
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <View
         style={{
           flexDirection: "row",
@@ -19,46 +41,71 @@ export default function Discover() {
           justifyContent: "space-between",
           paddingLeft: 16,
           paddingRight: 16,
+          backgroundColor: "#fff",
         }}
       >
         <Text style={{ fontSize: 24, fontWeight: "medium" }}>Discover</Text>
 
         <TouchableOpacity onPress={() => {}}>
-          <Compass />
+          <Search />
         </TouchableOpacity>
       </View>
-      <View style={{ alignItems: "center", marginTop: 10, marginBottom: 10 }}>
-        <View
-          className="relative"
-          style={{
-            borderWidth: 0.5,
-            borderRadius: 30,
-            backgroundColor: "#fff",
-            borderColor: "#2C057A",
+      <TabView
+        navigationState={{ index, routes }}
+        renderScene={renderScene}
+        onIndexChange={setIndex}
+        initialLayout={initialLayout}
+        renderTabBar={(props) => (
+          <TabBar
+            {...props}
+            activeColor={COLORS.primary}
+            inactiveColor={"black"}
+            scrollEnabled
+            indicatorStyle={styles.indicator}
+            style={styles.tabbar}
+            // labelStyle={styles.label}
 
-            marginTop: 10,
-            padding: 10,
-            height: 46,
-            width: width - 20,
-            position: "relative",
-            justifyContent: "center",
-            // alignItems: "center",
-          }}
-        >
-          <Search style={{ position: "absolute", left: 12, top: 12 }} />
-          <TextInput
-            style={{
-              fontSize: 16,
-              width: width,
-              borderWidth: 0,
-              borderRadius: 0,
-              height: 46,
-              paddingLeft: 30,
-            }}
-            placeholder="Search anything"
+            tabStyle={styles.tab}
           />
-        </View>
-      </View>
+        )}
+      />
+      {/* <View style={{ alignItems: "center", marginTop: 10, marginBottom: 10 }}>
+        
+      </View> */}
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  scene: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+  text: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: COLORS.primary,
+  },
+  tabbar: {
+    backgroundColor: "#fff",
+    elevation: 100,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  indicator: {
+    backgroundColor: COLORS.primary,
+    height: 3,
+    borderRadius: 3,
+  },
+  label: {
+    color: COLORS.primary,
+    // fontSize: 24,
+    fontWeight: "600",
+    textTransform: "none",
+  },
+  tab: {
+    width: initialLayout.width / 3,
+  },
+});

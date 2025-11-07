@@ -1,7 +1,11 @@
+"use client";
 import ChatItem from "@/components/ChatItem";
-import { chats } from "@/shared/data";
+import { useAuthStore } from "@/libs/store/authStore";
+import { Chat } from "@/models/chat";
+import { useSocket } from "@/shared/hooks/use-socket";
+import { Redirect, useRouter } from "expo-router";
 import { MessageCirclePlus, Search } from "lucide-react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dimensions,
   FlatList,
@@ -13,7 +17,34 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Chats() {
-  const { width } = Dimensions.get("window");
+  const socket = useSocket();
+  const { width, height } = Dimensions.get("window");
+
+  const [chats, setChats] = useState<Chat[]>([]);
+
+  const { session } = useAuthStore();
+  const router = useRouter();
+
+  if (!session) {
+    return <Redirect href={"/(auth)/login"} />;
+  }
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.emit("get_chats", { page: 1, size: 10 });
+
+    const handleChats = (res: any) => setChats(res.data);
+
+    socket.on("chats", handleChats);
+
+    return () => {
+      socket.off("chats", handleChats);
+    };
+  }, [socket]);
+
+  // if (!chats) return <ActivityIndicator size={"large"} />;
+
   return (
     <SafeAreaView
       style={{ flex: 1, justifyContent: "center", backgroundColor: "#fff" }}
@@ -29,9 +60,14 @@ export default function Chats() {
       >
         <Text style={{ fontSize: 24, fontWeight: "medium" }}>ZiltChat</Text>
 
-        <TouchableOpacity onPress={() => {}}>
+        <TouchableOpacity
+          onPress={() => router.push("/main/(profile)/add-friend")}
+        >
           <MessageCirclePlus />
         </TouchableOpacity>
+        {/* <TouchableOpacity onPress={refresh}>
+          <Loader />
+        </TouchableOpacity> */}
       </View>
       <View style={{ alignItems: "center", marginTop: 10, marginBottom: 10 }}>
         <View
@@ -65,15 +101,37 @@ export default function Chats() {
           />
         </View>
       </View>
-      <FlatList
-        data={chats}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <ChatItem item={item} />}
-        contentContainerStyle={{
-          padding: 5,
-        }}
-        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-      />
+
+      {chats?.length > 0 ? (
+        <FlatList
+          data={chats || []}
+          keyExtractor={(chat) => chat.id}
+          renderItem={({ item }) => <ChatItem chat={item} />}
+          contentContainerStyle={{
+            padding: 5,
+          }}
+          ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+        />
+      ) : (
+        <View
+          style={{
+            height: height - 250,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Text>
+            No Chat, Click{"  "}
+            <TouchableOpacity
+              onPress={() => router.push("/main/(profile)/add-friend")}
+            >
+              <MessageCirclePlus />
+            </TouchableOpacity>
+            {"  "}to add friends
+          </Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 }

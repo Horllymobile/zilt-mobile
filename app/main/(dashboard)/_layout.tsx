@@ -1,4 +1,5 @@
 import "@/global.css";
+import { COLORS } from "@/shared/constants/color";
 import { Tabs } from "expo-router";
 import { MessageCircle, Telescope, User } from "lucide-react-native";
 import React from "react";
@@ -11,15 +12,14 @@ export default function TabLayout() {
         headerShown: false,
         tabBarIconStyle: { marginTop: 5 },
         tabBarLabelStyle: { marginBottom: 5, fontSize: 12 },
-        tabBarActiveBackgroundColor: "#2C057A",
+        tabBarActiveBackgroundColor: COLORS.primary,
+        tabBarInactiveTintColor: COLORS.primary,
         tabBarStyle: {
-          backgroundColor: "#fff",
-          borderTopColor: "#2C057A",
-          paddingBottom: 5,
+          backgroundColor: COLORS.white,
+          borderTopColor: COLORS.primary,
+          paddingBottom: 0,
           borderTopWidth: 1,
           height: 70,
-          // borderTopLeftRadius: 10,
-          // borderTopRightRadius: 10,
         },
       }}
       initialRouteName="index"
@@ -33,7 +33,6 @@ export default function TabLayout() {
           ),
         }}
       />
-
       <Tabs.Screen
         name="discover"
         options={{
@@ -43,7 +42,6 @@ export default function TabLayout() {
           ),
         }}
       />
-
       <Tabs.Screen
         name="profile"
         options={{

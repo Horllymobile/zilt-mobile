@@ -1,8 +1,21 @@
+"use client";
+
+import AvatarPicker from "@/components/AvatarPicker";
 import { useAuthStore } from "@/libs/store/authStore";
-import { supabase } from "@/libs/superbase";
-import * as ImagePicker from "expo-image-picker";
-import { useState } from "react";
+import { PLACEHOLDER_CONSTANTS } from "@/shared/constants/placeholders";
+import { useDebounce } from "@/shared/hooks/use-debounce";
+import { useProfile } from "@/shared/hooks/use-profile";
 import {
+  useCheckNameQuery,
+  useGetProfileQuery,
+  useOnboardingMutation,
+} from "@/shared/services/auth/authApi";
+import * as Location from "expo-location";
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
   Alert,
   Dimensions,
   Platform,
@@ -12,77 +25,93 @@ import {
   View,
 } from "react-native";
 
-export default async function Login() {
+export default function Onboarding() {
+  const router = useRouter();
   const { width } = Dimensions.get("window");
   const [imageUri, setImageUri] = useState<string>("");
+  const [loading, setLoading] = useState(false);
 
-  const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
   const [bio, setBio] = useState("");
+  const { profile, setAuthData, session } = useAuthStore();
 
-  const [isLoading, setLoading] = useState(false);
-  const { session, user } = useAuthStore();
+  const [isUploading, setIsUploading] = useState(false);
 
-  // const openGallery = await launchImageLibrary({
-  //   mediaType: "photo",
-  //   quality: 1,
-  // });
-
-  const [imageFile, setImageFile] = useState<string | null | undefined>(
-    undefined
+  const [location, setLocation] = useState<Location.LocationObject | null>(
+    null
   );
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const pickImage = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 1,
-      });
+  if (profile?.onboarded) {
+    router.replace("/main/(dashboard)/");
+  }
 
-      if (!result.canceled) {
-        const asset = result.assets[0];
-        setImageUri(asset.uri);
-      }
-    } catch (err) {
-      console.error("Image picker error:", err);
+  useEffect(() => {
+    if (!session) router.replace("/(auth)/login");
+    if (session && profile?.onboarded) {
+      router.replace("/main/(dashboard)/");
     }
-  };
+  }, [profile, session]);
 
-  const handleSubmit = async () => {
-    if (!imageUri) {
-      Alert.alert("Please select an image first");
-      return;
-    }
-
-    try {
-      // ✅ Convert the URI to a blob (works in React Native)
-      const response = await fetch(imageUri);
-      const blob = await response.blob();
-
-      const filePath = `avatars/${Date.now()}.jpg`;
-
-      const { data, error } = await supabase.storage
-        .from("Zilt Storage") // your bucket name (no spaces)
-        .upload(filePath, blob, {
-          cacheControl: "3600",
-          upsert: false,
-          contentType: "image/jpeg",
-        });
-
-      if (error) {
-        console.error("Upload error:", error);
-        Alert.alert("Upload failed", error.message);
+  useEffect(() => {
+    (async () => {
+      // Ask for permission
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setErrorMsg("Permission to access location was denied");
         return;
       }
 
-      // ✅ Get public URL
-      const { data: publicUrl } = supabase.storage
-        .from("Zilt Storage")
-        .getPublicUrl(filePath);
+      // Get current location
+      const loc = await Location.getCurrentPositionAsync({});
+      setLocation(loc);
+    })();
+  }, []);
 
-      console.log("Upload success:", publicUrl.publicUrl);
-      Alert.alert("Upload successful!", publicUrl.publicUrl);
+  const { profile: prof } = useProfile();
+
+  const debounceName = useDebounce(name, 500);
+  const {
+    data: checkNameExist,
+    isFetching: isCheckingName,
+    refetch: recheckName,
+  } = useCheckNameQuery(false, debounceName);
+
+  const { data: newProfile, refetch: refetchProfile } =
+    useGetProfileQuery(false);
+
+  const onboardingMutation = useOnboardingMutation();
+  const isValid = name !== "" && imageUri !== "";
+
+  const handleSubmit = async () => {
+    try {
+      if (!imageUri) {
+        Alert.alert("Please select an image first");
+        return;
+      }
+      setLoading(true);
+
+      onboardingMutation.mutate(
+        {
+          bio,
+          name,
+          avatar_url: imageUri,
+          location: {
+            lat: location?.coords?.latitude,
+            long: location?.coords?.longitude,
+          },
+        },
+        {
+          onSuccess: () => {
+            refetchProfile();
+            setLoading(false);
+            setAuthData({
+              profile: newProfile,
+              session,
+            });
+          },
+        }
+      );
     } catch (err) {
       console.error("Upload error:", err);
       Alert.alert("Error uploading image");
@@ -97,35 +126,15 @@ export default async function Login() {
       }}
     >
       <Text style={{ fontSize: 24, marginBottom: 30 }}>Account Setup</Text>
-      {/* <TouchableOpacity onPress={() => pickImage()}>
-        <View
-          style={{
-            width: 150,
-            height: 150,
-            minHeight: 150,
-            minWidth: 150,
-            backgroundColor: "#fff",
-            borderWidth: 1,
-            borderRadius: 50,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          {!imageUri ? (
-            <ImageIcon size={34} />
-          ) : (
-            <Image
-              source={{ uri: imageUri }}
-              style={{
-                width: 150,
-                height: 150,
-                borderRadius: 50,
-              }}
-            />
-          )}
-        </View>
-      </TouchableOpacity> */}
+      <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
+      <AvatarPicker
+        onImageLoaded={(url) => {
+          setImageUri(url);
+        }}
+        imageURI={profile?.avatar_url || PLACEHOLDER_CONSTANTS.avatar}
+      />
+      {/* <ImagePicker onImageLoaded={onImageLoaded} imageURI={imageUri} />
+       */}
       <View>
         <Text>Username</Text>
         <View
@@ -146,10 +155,23 @@ export default async function Login() {
               borderRadius: 0,
             }}
             placeholder="Enter your username"
-            value={username}
-            onChangeText={setUsername}
+            value={name}
+            onChangeText={(n) => {
+              setName(n);
+              if (n && n !== profile?.name) {
+                recheckName();
+              }
+            }}
           />
         </View>
+        <Text
+          style={{
+            marginTop: 5,
+            color: checkNameExist?.success ? "green" : "red",
+          }}
+        >
+          {checkNameExist?.message}
+        </Text>
       </View>
 
       <View style={{ marginTop: 20 }}>
@@ -178,6 +200,8 @@ export default async function Login() {
             }}
             placeholder="Enter your bio"
             value={bio}
+            multiline={true}
+            maxLength={100}
             onChangeText={setBio}
           />
         </View>
@@ -194,6 +218,7 @@ export default async function Login() {
           alignItems: "center",
           borderRadius: 20,
         }}
+        disabled={loading || !isValid || isUploading}
         className="p-4 bg-[#2C057A] rounded-full"
         onPress={handleSubmit}
       >
@@ -209,7 +234,11 @@ export default async function Login() {
           }}
           className="text-white"
         >
-          Submit
+          {loading ? (
+            <ActivityIndicator size={"small"} color="white" />
+          ) : (
+            "Submit"
+          )}
         </Text>
       </TouchableHighlight>
     </View>

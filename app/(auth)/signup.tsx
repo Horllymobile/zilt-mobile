@@ -1,9 +1,10 @@
-import { supabase } from "@/libs/superbase";
-import { router } from "expo-router";
-import { Eye, EyeOff, Loader2 } from "lucide-react-native";
+import { useAuthStore } from "@/libs/store/authStore";
+import { useRegisterMutation } from "@/shared/services/auth/authApi";
+import { Redirect, router } from "expo-router";
+import { Eye, EyeOff } from "lucide-react-native";
 import { useState } from "react";
 import {
-  Alert,
+  ActivityIndicator,
   Dimensions,
   Image,
   Platform,
@@ -17,30 +18,38 @@ import {
 export default function SignUp() {
   const { width } = Dimensions.get("window");
 
-  const [email, setEmail] = useState("horlamidex1@gmail.com");
-  const [password, setPassword] = useState("P@ssword1");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const [isLoading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   // const { session } = useAuthStore();
 
-  const handleSubmit = async () => {
-    console.log(email, password);
-    setLoading(true);
-    const auth = await supabase.auth.signUp({
-      email: email,
-      password: password,
-    });
-    setLoading(false);
+  const { setAuthData, session } = useAuthStore();
 
-    if (auth.error) {
-      Alert.alert(auth.error.message);
-    } else {
-      if (auth.data.user?.confirmation_sent_at) {
-        Alert.alert("Verify", "Check your mail to verify");
+  if (session) {
+    return <Redirect href={"/main/(dashboard)"} />;
+    // router.push("/main/(dashboard)/");
+  }
+
+  const registerMutation = useRegisterMutation();
+
+  const handleSubmit = async () => {
+    // console.log(email, password);
+
+    registerMutation.mutate(
+      {
+        email: email.toLowerCase(),
+        password,
+      },
+      {
+        onSuccess: () => {
+          setEmail("");
+          setPassword("");
+        },
       }
-    }
+    );
   };
   return (
     <View
@@ -140,7 +149,7 @@ export default function SignUp() {
           borderRadius: 20,
         }}
         className="p-4 bg-[#2C057A] rounded-full"
-        disabled={isLoading}
+        disabled={registerMutation.isPending}
         onPress={() => {
           handleSubmit();
         }}
@@ -157,8 +166,8 @@ export default function SignUp() {
           }}
           className="text-white"
         >
-          {isLoading ? (
-            <Loader2 className="animate-spin" color="white" />
+          {registerMutation.isPending ? (
+            <ActivityIndicator size={"small"} color="white" />
           ) : (
             "Sign Up"
           )}
@@ -167,10 +176,13 @@ export default function SignUp() {
 
       <TouchableHighlight
         className="p-4 mt-5"
+        style={{
+          marginTop: 10,
+        }}
         onPress={() => {
           router.navigate("/(auth)/login");
         }}
-        disabled={isLoading}
+        disabled={registerMutation.isPending}
       >
         <Text
           style={{

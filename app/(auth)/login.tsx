@@ -1,10 +1,10 @@
 import { useAuthStore } from "@/libs/store/authStore";
-import { supabase } from "@/libs/superbase";
-import { router } from "expo-router";
-import { Eye, EyeOff, Loader2 } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import { useLoginMutation } from "@/shared/services/auth/authApi";
+import { Redirect, router } from "expo-router";
+import { Eye, EyeOff } from "lucide-react-native";
+import { useState } from "react";
 import {
-  Alert,
+  ActivityIndicator,
   Dimensions,
   Image,
   Platform,
@@ -18,51 +18,26 @@ import {
 export default function Login() {
   const { width } = Dimensions.get("window");
 
-  const [email, setEmail] = useState("horlamidex1@gmail.com");
-  const [password, setPassword] = useState("P@ssword1");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const [isLoading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const { setAuthData, session } = useAuthStore();
 
-  useEffect(() => {
-    console.log(session);
-  }, [session]);
+  if (session) {
+    return <Redirect href={"/main/(dashboard)"} />;
+    // router.push("/main/(dashboard)/");
+  }
+
+  const loginMutation = useLoginMutation();
 
   const handleSubmit = async () => {
-    setLoading(true);
-    supabase.auth.signInWithOtp({
-      email,
+    loginMutation.mutate({
+      email: email.toLowerCase(),
+      password,
     });
-    const auth = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password,
-    });
-
-    if (auth.error) {
-      Alert.alert(auth.error.message);
-    } else {
-      setAuthData({
-        session: auth.data.session,
-        user: auth.data.user,
-      });
-
-      supabase
-        .from("users")
-        .select("")
-        .eq("id", auth.data.user?.user_metadata?.sub)
-        .single()
-        .then((res) => {
-          console.log(res);
-          if (!res.data) {
-            router.navigate("/onboarding");
-          } else {
-            router.push("/main/(dashboard)");
-          }
-        });
-    }
-    setLoading(false);
   };
 
   return (
@@ -162,7 +137,7 @@ export default function Login() {
           alignItems: "center",
           borderRadius: 20,
         }}
-        disabled={isLoading}
+        disabled={loginMutation.isPending}
         className="p-4 bg-[#2C057A] rounded-full"
         onPress={() => {
           handleSubmit();
@@ -180,8 +155,8 @@ export default function Login() {
           }}
           className="text-white"
         >
-          {isLoading ? (
-            <Loader2 className="animate-spin" color="white" />
+          {loginMutation.isPending ? (
+            <ActivityIndicator size={"small"} color="white" />
           ) : (
             "Login"
           )}
@@ -189,10 +164,14 @@ export default function Login() {
       </TouchableHighlight>
 
       <TouchableHighlight
-        className="mt-2"
+        className="mt-5"
+        style={{
+          marginTop: 15,
+        }}
         onPress={() => {
           router.navigate("/(auth)/signup");
         }}
+        disabled={loginMutation.isPending}
       >
         <Text
           style={{
@@ -211,6 +190,10 @@ export default function Login() {
 
       <TouchableHighlight
         className="p-2 mt-3"
+        style={{
+          marginTop: 15,
+        }}
+        disabled={loginMutation.isPending}
         onPress={() => {
           router.navigate("/(auth)/signup");
         }}

@@ -1,3 +1,4 @@
+"use client";
 import { useAuthStore } from "@/libs/store/authStore";
 import { RelativePathString, router } from "expo-router";
 import {
@@ -61,8 +62,8 @@ export default function Settings() {
       name: "Logout",
       icon: <LogOut color="red" size={24} />,
       onClick: () => {
-        console.log("Logout clicked");
-        router.replace("/(auth)/login");
+        // console.log("Logout clicked");
+        // router.replace("/(auth)/login");
         logout();
       },
     },

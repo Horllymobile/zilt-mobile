@@ -1,50 +1,29 @@
 import "@/global.css";
+import { refreshAccessToken } from "@/libs/api/refresh";
 import { useAuthStore } from "@/libs/store/authStore";
-import { supabase } from "@/libs/superbase";
-import { User } from "@supabase/supabase-js";
-import { Redirect, router, Stack } from "expo-router";
+import { Stack } from "expo-router";
 import { useEffect } from "react";
 
 export default function MainLayout() {
-  const { session, user } = useAuthStore();
+  const { session } = useAuthStore();
 
   useEffect(() => {
-    if (user) {
-      fetchUserData(user);
+    if (!session) return;
+
+    const currentTime = Math.floor(Date.now() / 1000); // current time in seconds
+    const expiresAt = session.expiresAt; // e.g., 1730678367 (timestamp in seconds)
+
+    const isExpired = expiresAt && expiresAt < currentTime;
+
+    if (isExpired && session.refresh) {
+      console.log("Session expired — logging out user...");
+      refreshAccessToken(session.refresh).then(() => {});
     }
-  }, [user]);
-
-  // ✅ async function stays outside render
-  const fetchUserData = async (user: User) => {
-    try {
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (error) {
-        console.error("Supabase error:", error);
-        return;
-      }
-
-      if (!data) {
-        // No user profile → onboard
-        router.replace("/onboarding");
-      }
-    } catch (err) {
-      console.error("Error fetching user:", err);
-    }
-  };
-
-  // ✅ handle redirect in render
-  if (!session || !user) {
-    return <Redirect href="/(auth)/login" />;
-  }
-
+  }, [session]);
   return (
     <Stack screenOptions={{ headerShown: false }}>
       {/* The nested routes like (dashboard) will render here */}
+      <Stack.Screen name="CropMoment" />
     </Stack>
   );
 }

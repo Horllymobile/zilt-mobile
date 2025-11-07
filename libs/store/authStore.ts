@@ -1,12 +1,12 @@
 // store.ts
+import { Profile, Session } from "@/models/profile";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Session, User } from "@supabase/supabase-js";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 type AuthState = {
-  session?: Session | null;
-  user?: User | null;
+  session?: Session | undefined;
+  profile?: Profile | undefined;
 
   setAuthData: (data: Omit<AuthState, "setAuthData" | "logout">) => void;
   logout: () => void;
@@ -15,19 +15,19 @@ type AuthState = {
 export const useAuthStore = create(
   persist<AuthState>(
     (set) => ({
-      session: null,
-      user: null,
+      session: undefined,
+      user: undefined,
       setAuthData: (data: Omit<AuthState, "setAuthData" | "logout">) =>
         set(data),
       logout() {
         set({
-          session: null,
-          user: null,
+          session: undefined,
+          profile: undefined,
         });
       },
     }),
     {
-      name: "auth-storage", // storage key
+      name: "auth", // storage key
       storage: {
         getItem: async (name) => {
           const value = await AsyncStorage.getItem(name);
@@ -46,6 +46,6 @@ export const useAuthStore = create(
 
 export const selectAuth = (state: AuthState) => ({
   session: state.session,
-  user: state.user,
+  profile: state.profile,
   setAuthData: state.setAuthData,
 });

@@ -1,7 +1,19 @@
-import { router } from "expo-router";
+import { useAuthStore } from "@/libs/store/authStore";
+import { useRouter } from "expo-router";
+import { useEffect } from "react";
 import { Image, Platform, Text, TouchableHighlight, View } from "react-native";
 
 export default function Splash() {
+  const { session } = useAuthStore();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!session) return;
+    if (session) {
+      router.replace("/main/(dashboard)/");
+      return;
+    }
+  }, [session]);
   return (
     <View
       style={{
