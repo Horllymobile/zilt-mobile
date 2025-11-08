@@ -7,13 +7,8 @@ import { PLACEHOLDER_CONSTANTS } from "@/shared/constants/placeholders";
 import { useFindFriendQuery } from "@/shared/services/auth/authApi";
 import { useCreateChatMutation } from "@/shared/services/chats/chatApi";
 import { useRouter } from "expo-router";
-import {
-  ChevronLeft,
-  Loader2,
-  MessageCircle,
-  Search,
-} from "lucide-react-native";
-import { useState } from "react";
+import { MessageCircle, Search, X } from "lucide-react-native";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -61,6 +56,12 @@ export default function AddFriend() {
     }
   };
 
+  useEffect(() => {
+    if (isError) {
+      console.log(error);
+    }
+  }, [isError, error]);
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <View
@@ -79,12 +80,27 @@ export default function AddFriend() {
               router.back();
             }}
           >
-            <ChevronLeft color="#2C057A" size={24} />
+            <X color="#2C057A" size={24} />
           </TouchableOpacity>
-          <Text style={{ fontSize: 18, fontWeight: "medium" }}>Back</Text>
+          {/* <Text style={{ fontSize: 18, fontWeight: "medium" }}>Back</Text> */}
         </View>
       </View>
 
+      {/* {isError && (
+        <View
+          style={{
+            marginTop: 20,
+            paddingHorizontal: 16,
+            gap: 15,
+            alignItems: "center",
+            borderBottomWidth: 1,
+            borderBottomColor: "#ddd",
+            paddingBottom: 20,
+          }}
+        >
+          <Text>{error.message}</Text>
+        </View>
+      )} */}
       {user && (
         <View
           style={{
@@ -162,7 +178,6 @@ export default function AddFriend() {
         </Text>
         {/* QR Code Scanner component would go here */}
         <View>
-          {err && <Text style={{ color: "red" }}>{err.message.message}</Text>}
           <View
             style={{
               borderWidth: 0.2,
@@ -179,8 +194,10 @@ export default function AddFriend() {
                 width: width - 40,
                 borderWidth: 0,
                 borderRadius: 0,
+                color: COLORS.black,
               }}
               placeholder="Enter your username"
+              placeholderTextColor={COLORS.black}
               value={name}
               onChangeText={(n) => {
                 setName(n);
@@ -205,21 +222,24 @@ export default function AddFriend() {
           onPress={() => refetch()}
         >
           <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-            <Search color="white" size={18} />
-            <Text
-              style={{
-                fontSize: 16,
-                textAlign: "center",
-                color: "white",
-                fontWeight: "500",
-              }}
-            >
-              {isFetching ? (
-                <Loader2 className=" animate-spin" color="white" />
-              ) : (
-                "Submit"
-              )}
-            </Text>
+            {isFetching ? (
+              <ActivityIndicator size={"small"} color="white" />
+            ) : (
+              <>
+                <Search color="white" size={18} />
+
+                <Text
+                  style={{
+                    fontSize: 16,
+                    textAlign: "center",
+                    color: "white",
+                    fontWeight: "500",
+                  }}
+                >
+                  Search
+                </Text>
+              </>
+            )}
           </View>
         </TouchableOpacity>
       </View>

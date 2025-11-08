@@ -1,4 +1,5 @@
 import { useAuthStore } from "@/libs/store/authStore";
+import { getColorFromString } from "@/libs/utils/colors";
 import { timeAgo } from "@/libs/utils/lib";
 import { Chat } from "@/models/chat";
 import { COLORS } from "@/shared/constants/color";
@@ -49,7 +50,7 @@ export default function ChatItem({ chat }: { chat: Chat }) {
             width: 50,
             height: 50,
             borderRadius: 25,
-            backgroundColor: "#c3adef",
+            backgroundColor: getColorFromString(member?.user?.name),
             overflow: "hidden",
             marginRight: 12,
             alignItems: "center",

@@ -1,16 +1,9 @@
-import CreateMoment from "@/components/CreateMoment";
 import FloatingActionButton from "@/components/FloatingActionButton";
 import { COLORS } from "@/shared/constants/color";
+import { useRouter } from "expo-router";
 import { Zap } from "lucide-react-native";
 import { useState } from "react";
-import {
-  Dimensions,
-  Modal,
-  StyleSheet,
-  Text,
-  TouchableWithoutFeedback,
-  View,
-} from "react-native";
+import { Dimensions, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const initialLayout = {
@@ -20,44 +13,47 @@ const initialLayout = {
 
 export default function Moment() {
   const [modalVisible, setModalVisible] = useState(false);
+  const router = useRouter();
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, justifyContent: "center", backgroundColor: "#fff" }}
-    >
+    <SafeAreaView style={styles.safeArea}>
       <Text style={styles.text}>👥 Zilt Moment</Text>
 
       {!modalVisible && (
         <FloatingActionButton
           icon={<Zap color={COLORS.white} />}
-          onPress={() => setModalVisible(true)}
+          onPress={() => router.push("/main/(discover)/create-moment")}
         />
       )}
 
-      <View>
-        <Modal
-          animationType="slide"
-          transparent={false} // keep true for overlay look
-          visible={modalVisible}
-          onRequestClose={() => setModalVisible(false)}
-        >
-          <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-            <View style={styles.modalOverlay} />
-          </TouchableWithoutFeedback>
+      {/* <Modal
+        animationType="slide"
+        transparent={false} // keep true for overlay look
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+          <View style={styles.modalOverlay} />
+        </TouchableWithoutFeedback>
 
-          <View style={styles.modalContainer}>
-            <CreateMoment
-              setModalVisible={setModalVisible}
-              modalVisible={modalVisible}
-            />
-          </View>
-        </Modal>
-      </View>
+        <View style={styles.modalContainer}>
+          <CreateMoment
+            setModalVisible={setModalVisible}
+            modalVisible={modalVisible}
+          />
+        </View>
+      </Modal> */}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    minHeight: "100%",
+  },
   text: {
     fontSize: 18,
     fontWeight: "600",

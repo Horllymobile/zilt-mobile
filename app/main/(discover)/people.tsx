@@ -1,4 +1,3 @@
-import LoaderActivity from "@/components/Loader";
 import PeopleItem from "@/components/PeopleItem";
 import { COLORS } from "@/shared/constants/color";
 import { useFindPeopleQuery } from "@/shared/services/discovers/discoverApi";
@@ -13,9 +12,9 @@ export default function People() {
 
   //   console.log(people);
 
-  if (isFetching) {
-    return <LoaderActivity />;
-  }
+  // if (isFetching) {
+  //   return <LoaderActivity />;
+  // }
   return (
     <View style={styles.scene}>
       {people ? (

@@ -2,8 +2,10 @@
 
 import AvatarPicker from "@/components/AvatarPicker";
 import { useAuthStore } from "@/libs/store/authStore";
+import { supabase } from "@/libs/superbase";
+import { Profile } from "@/models/profile";
+import { IApiResponse } from "@/models/response";
 import { COLORS } from "@/shared/constants/color";
-import { PLACEHOLDER_CONSTANTS } from "@/shared/constants/placeholders";
 import { useDebounce } from "@/shared/hooks/use-debounce";
 import {
   useCheckNameQuery,
@@ -11,6 +13,7 @@ import {
   useOnboardingMutation,
 } from "@/shared/services/auth/authApi";
 
+import { decode as atob, encode as btoa } from "base-64";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -31,15 +34,17 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EditAccount() {
   const { data: profile, refetch: refetchProfile } = useGetProfileQuery(true);
-  const { setAuthData, session } = useAuthStore();
+  const { setAuthData, session, profile: currentProfileData } = useAuthStore();
   const { width } = Dimensions.get("window");
-  const [imageUri, setImageUri] = useState<string>(profile?.avatar_url ?? "");
+  const [imageUri, setImageUri] = useState<string>(
+    currentProfileData?.avatar_url ?? ""
+  );
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
-  const [name, setName] = useState(profile?.name ?? "");
-  const [bio, setBio] = useState(profile?.bio ?? "");
+  const [name, setName] = useState(currentProfileData?.name ?? "");
+  const [bio, setBio] = useState(currentProfileData?.bio ?? "");
 
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null
@@ -65,11 +70,17 @@ export default function EditAccount() {
   }, []);
 
   useEffect(() => {
+    // console.log(profile);
     if (profile) {
       setAuthData({
         session,
-        profile,
+        profile: profile,
       });
+
+      console.log(profile.avatar_url);
+      setImageUri(profile.avatar_url);
+      setName(profile?.name);
+      setBio(profile?.bio);
     }
   }, [profile]);
 
@@ -89,27 +100,67 @@ export default function EditAccount() {
   //   const filePath = `avatars/${name}-${Date.now()}.jpg`;
 
   //   setIsUploading(true);
-  //   const { data, error } = await supabase.storage
-  //     .from("ZiltStorage")
-  //     .upload(filePath, uint8Array, {
-  //       contentType: file.type,
-  //       cacheControl: "3600",
-  //       upsert: true,
-  //     });
+  // const { data, error } = await supabase.storage
+  //   .from("ZiltStorage")
+  //   .upload(filePath, uint8Array, {
+  //     contentType: file.type,
+  //     cacheControl: "3600",
+  //     upsert: true,
+  //   });
 
-  //   if (error) {
-  //     // console.error("Upload error:", error);
-  //     Alert.alert("Upload failed", error.message);
-  //     return;
-  //   }
+  // if (error) {
+  //   // console.error("Upload error:", error);
+  //   Alert.alert("Upload failed", error.message);
+  //   return;
+  // }
 
-  //   const { data: publicUrl } = supabase.storage
-  //     .from("ZiltStorage")
-  //     .getPublicUrl(filePath);
+  // const { data: publicUrl } = supabase.storage
+  //   .from("ZiltStorage")
+  //   .getPublicUrl(filePath);
 
-  //   setImageUri(publicUrl.publicUrl);
+  // setImageUri(publicUrl.publicUrl);
   //   setIsUploading(false);
   // };
+
+  const uploadSvg = async () => {
+    const svgString = imageUri; // "<svg ...>...</svg>"
+    const filePath = `avatars/${name}-Profile.svg`;
+
+    // Encode the SVG string to base64
+    const base64 = btoa(unescape(encodeURIComponent(svgString)));
+
+    // Convert base64 → binary → Uint8Array
+    const binary = atob(base64);
+    const len = binary.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+
+    console.log(bytes.byteLength);
+
+    const { data, error } = await supabase.storage
+      .from("ZiltStorage")
+      .upload(filePath, bytes, {
+        contentType: "image/svg+xml",
+        cacheControl: "3600",
+        upsert: true,
+      });
+
+    if (error) {
+      console.error("Upload error:", error);
+      Alert.alert("Upload failed", error.message);
+      return;
+    }
+
+    const { data: publicUrl } = supabase.storage
+      .from("ZiltStorage")
+      .getPublicUrl(filePath);
+
+    console.log(publicUrl);
+
+    return publicUrl.publicUrl;
+  };
 
   const handleSubmit = async () => {
     try {
@@ -118,20 +169,33 @@ export default function EditAccount() {
         return;
       }
 
+      const avatar_url = await uploadSvg();
+
       setLoading(true);
       onboardingMutation.mutate(
         {
           bio,
           name: name || profile?.name || "",
-          avatar_url: imageUri || profile?.avatar_url,
+          avatar_url: avatar_url || profile?.avatar_url,
           location: {
             lat: location?.coords?.latitude || profile?.location?.lat,
             long: location?.coords?.longitude || profile?.location?.long,
           },
         },
         {
-          onSuccess: () => {
+          onSuccess: (data: IApiResponse<Profile>) => {
+            setAuthData({
+              session,
+              profile: data.data,
+            });
             refetchProfile();
+            setLoading(false);
+
+            if (router?.canGoBack()) {
+              router.back();
+            }
+          },
+          onError: () => {
             setLoading(false);
           },
         }
@@ -183,7 +247,7 @@ export default function EditAccount() {
           onImageLoaded={(url) => {
             setImageUri(url);
           }}
-          imageURI={profile?.avatar_url || PLACEHOLDER_CONSTANTS.avatar}
+          imageURI={profile?.avatar_url ?? ""}
         />
         {/* <ImagePicker onImageLoaded={onImageLoaded} imageURI={imageUri} /> */}
 
@@ -269,7 +333,12 @@ export default function EditAccount() {
             alignItems: "center",
             borderRadius: 20,
           }}
-          disabled={loading || !isValid || isUploading || isCheckingName}
+          disabled={
+            onboardingMutation.isPending ||
+            !isValid ||
+            isUploading ||
+            isCheckingName
+          }
           onPress={handleSubmit}
         >
           <Text
@@ -283,7 +352,7 @@ export default function EditAccount() {
               color: COLORS.white,
             }}
           >
-            {loading ? (
+            {onboardingMutation.isPending || isUploading ? (
               <ActivityIndicator color={COLORS.white} size={"small"} />
             ) : (
               "Submit"

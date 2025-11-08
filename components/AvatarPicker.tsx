@@ -1,3 +1,4 @@
+import { getColorFromString } from "@/libs/utils/colors";
 import {
   adventurer,
   avataaars,
@@ -11,11 +12,10 @@ import {
 import { createAvatar } from "@dicebear/core";
 import React, { useRef, useState } from "react";
 import { FlatList, Text, TouchableOpacity, View } from "react-native";
-import { SvgXml } from "react-native-svg";
 import { Avatar } from "./Avatar";
 
 type Props = {
-  imageURI?: string;
+  imageURI: string;
   onImageLoaded: (url: string) => void;
 };
 
@@ -46,6 +46,8 @@ export default function AvatarPicker({ onImageLoaded, imageURI }: Props) {
     );
   });
 
+  // const [svgXml, setSvgXml] = useState<string | null>(null);
+
   const [avatar, setAvatar] = useState(
     imageURI || createAvatar(adventurer, { seed: "", size: 100 }).toString()
   );
@@ -70,21 +72,23 @@ export default function AvatarPicker({ onImageLoaded, imageURI }: Props) {
         marginVertical: 20,
       }}
     >
-      <View
+      <Avatar
         style={{
           width: 120,
           height: 120,
           borderRadius: 75,
           borderWidth: 2,
           borderColor: "#2C057A",
+          backgroundColor: getColorFromString(avatar),
           justifyContent: "center",
           alignItems: "center",
           marginHorizontal: 5,
           marginBottom: 16,
         }}
-      >
-        <SvgXml xml={avatar || ""} width="100" height="100" />
-      </View>
+        avatar_url={avatar}
+        width={100}
+        height={100}
+      />
       {/* ✅ Avatar Carousel */}
       <View
         style={{

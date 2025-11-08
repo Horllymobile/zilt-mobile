@@ -1,17 +1,18 @@
+import { getRandomColor } from "@/libs/utils/colors";
 import { COLORS } from "@/shared/constants/color";
-import { Image, Pencil, Send, Video, X } from "lucide-react-native";
+import { useRouter } from "expo-router";
+import { Image, Pencil, Send, X } from "lucide-react-native";
 import { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
-  Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import FloatingActionButton from "./FloatingActionButton";
+import FloatingActionButton from "../../../components/FloatingActionButton";
 
 export default function CreateMoment({
   setModalVisible,
@@ -21,6 +22,7 @@ export default function CreateMoment({
   modalVisible: boolean;
 }) {
   const [type, setType] = useState("text");
+  const router = useRouter();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -31,10 +33,15 @@ export default function CreateMoment({
         {/* HEADER */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <TouchableOpacity onPress={() => setModalVisible(!modalVisible)}>
+            <TouchableOpacity
+              onPress={() => {
+                if (router.canDismiss()) {
+                  router.dismiss();
+                }
+              }}
+            >
               <X color={COLORS.primary} size={24} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Add Moment</Text>
           </View>
         </View>
 
@@ -72,7 +79,7 @@ export default function CreateMoment({
               size={28}
             />
           </TouchableOpacity>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             onPress={() => setType("live")}
             style={[
               styles.selectorButton,
@@ -87,7 +94,7 @@ export default function CreateMoment({
               color={type === "live" ? COLORS.white : COLORS.primary}
               size={28}
             />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         {/* TEXT INPUT */}
@@ -98,8 +105,8 @@ export default function CreateMoment({
               multiline={true}
               maxLength={700}
               autoFocus={true}
-              placeholder="What's on your mind?"
-              placeholderTextColor="#999"
+              placeholder="Type a moment"
+              placeholderTextColor={COLORS.white}
               textAlign="center"
               textAlignVertical="center"
             />
@@ -116,18 +123,19 @@ export default function CreateMoment({
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
   container: {
     flex: 1,
   },
+  safeArea: {
+    flex: 1,
+    backgroundColor: getRandomColor(),
+  },
   header: {
+    paddingTop: 10,
+    paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
   },
   headerLeft: {
     flexDirection: "row",

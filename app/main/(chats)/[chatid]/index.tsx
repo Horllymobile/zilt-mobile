@@ -1,6 +1,5 @@
 "use client";
 
-import CropMoment from "@/app/CropMoment";
 import { Avatar } from "@/components/Avatar";
 import ChatMessage from "@/components/ChatMessage";
 import { useAuthStore } from "@/libs/store/authStore";
@@ -9,8 +8,7 @@ import { Message } from "@/models/chat";
 import { COLORS } from "@/shared/constants/color";
 import { useSocket } from "@/shared/hooks/use-socket";
 import { useGetChatQuery } from "@/shared/services/chats/chatApi";
-import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+// import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { File } from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { usePathname, useRouter } from "expo-router";
@@ -28,7 +26,6 @@ import {
   Dimensions,
   FlatList,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   StyleSheet,
   Text,
@@ -45,7 +42,7 @@ export type RootStackParamList = {
   CreateMoment: { imageUri?: string };
 };
 
-type ChatScreenNav = NativeStackNavigationProp<RootStackParamList, "Chat">;
+// type ChatScreenNav = NativeStackNavigationProp<RootStackParamList, "Chat">;
 
 export default function Chat() {
   const { width } = Dimensions.get("window");
@@ -61,7 +58,7 @@ export default function Chat() {
   const { data: chat } = useGetChatQuery(chatId);
   const member = chat?.members.find((user) => user.userId !== profile?.id);
 
-  const navigation = useNavigation<ChatScreenNav>();
+  // const navigation = useNavigation<ChatScreenNav>();
 
   const viewShotRef = useRef<ViewShot | null>(null);
 
@@ -71,14 +68,13 @@ export default function Chat() {
   const [imageURL, setImageURL] = useState("");
 
   const handleCapture = async () => {
-    console.log("Handle Capture");
     try {
       const uri = await viewShotRef.current?.capture?.();
       if (uri) {
-        console.log(uri);
-        setImageToCrop(uri);
-        // Navigate to crop screen or show modal
-        // navigation.navigate<any>("CropMoment", { imageUri: uri });
+        router.push({
+          pathname: "/main/(discover)/crop-moment",
+          params: { imageUri: encodeURIComponent(uri) },
+        });
       }
     } catch (e) {
       console.log("Error capturing:", e);
@@ -354,23 +350,6 @@ export default function Chat() {
       ) : (
         <View></View>
       )}
-
-      {imageToCrop ? (
-        <Modal
-          visible={true}
-          animationType="slide"
-          transparent={false} // keep true for overlay look
-        >
-          <CropMoment
-            imageUri={imageToCrop}
-            onComplete={(croppedUri) => {
-              setImageToCrop(null);
-              // open CreateMoment modal here
-            }}
-            onClose={() => setImageToCrop(null)}
-          />
-        </Modal>
-      ) : undefined}
     </SafeAreaView>
   );
 }

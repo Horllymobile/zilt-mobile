@@ -1,4 +1,5 @@
 import { useAuthStore } from "@/libs/store/authStore";
+import { getColorFromString } from "@/libs/utils/colors";
 import { Profile } from "@/models/profile";
 import { COLORS } from "@/shared/constants/color";
 import { useCreateChatMutation } from "@/shared/services/chats/chatApi";
@@ -11,7 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SvgXml } from "react-native-svg";
+import { Avatar } from "./Avatar";
 
 const initialLayout = {
   width: Dimensions.get("window").width,
@@ -79,20 +80,21 @@ export default function PeopleItem({ person }: { person: Profile }) {
             borderRadius: 0,
           }}
         >
-          <View
+          <Avatar
+            avatar_url={person?.avatar_url}
             style={{
               width: 50,
               height: 50,
               borderRadius: 25,
-              backgroundColor: "#c3adef",
+              backgroundColor: getColorFromString(person.name),
               overflow: "hidden",
               marginRight: 12,
               alignItems: "center",
               justifyContent: "center",
             }}
-          >
-            <SvgXml xml={person?.avatar_url || ""} width="50" height="50" />
-          </View>
+            width={50}
+            height={50}
+          />
           <View style={{}}>
             <Text style={{ fontSize: 16, fontWeight: "600" }}>
               {person?.name}

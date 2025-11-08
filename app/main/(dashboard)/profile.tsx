@@ -1,6 +1,7 @@
 "use client";
 import { Avatar } from "@/components/Avatar";
 import { useAuthStore } from "@/libs/store/authStore";
+import { getColorFromString } from "@/libs/utils/colors";
 import { RelativePathString, router } from "expo-router";
 import { ChevronLeft, QrCode, Settings, User } from "lucide-react-native";
 import {
@@ -83,7 +84,7 @@ export default function Profile() {
               width: 100,
               height: 100,
               borderRadius: 100,
-              backgroundColor: "#c3adef",
+              backgroundColor: getColorFromString(profile.avatar_url),
               justifyContent: "center",
               alignItems: "center",
               position: "relative",

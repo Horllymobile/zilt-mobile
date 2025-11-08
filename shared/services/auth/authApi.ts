@@ -66,11 +66,6 @@ export const useOnboardingMutation = () => {
   return useMutation({
     mutationFn: (data: OnboardingDto) =>
       axiosBaseQuery({ ...authEndpoints.onboarding, data }),
-    onSuccess: (resp: IApiResponse<void>) => {
-      if (resp.success) {
-        router.back();
-      }
-    },
     onError: (error: any) => {
       // console.log(error);
       // Alert.alert(formatErrorMessage(error));
@@ -84,9 +79,8 @@ export const useGetProfileQuery = (enabled: boolean) => {
     queryKey: ["profile"],
     queryFn: async () => {
       const resp = await axiosBaseQuery(authEndpoints.getProfile);
-      // console.log(resp.data);
 
-      return resp.data;
+      return resp as Profile;
     },
     enabled,
   });

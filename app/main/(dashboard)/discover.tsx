@@ -55,6 +55,7 @@ export default function Discover() {
         renderScene={renderScene}
         onIndexChange={setIndex}
         initialLayout={initialLayout}
+        // style={{ minHeight: "100%" }}
         renderTabBar={(props) => (
           <TabBar
             {...props}
@@ -64,14 +65,10 @@ export default function Discover() {
             indicatorStyle={styles.indicator}
             style={styles.tabbar}
             // labelStyle={styles.label}
-
             tabStyle={styles.tab}
           />
         )}
       />
-      {/* <View style={{ alignItems: "center", marginTop: 10, marginBottom: 10 }}>
-        
-      </View> */}
     </SafeAreaView>
   );
 }

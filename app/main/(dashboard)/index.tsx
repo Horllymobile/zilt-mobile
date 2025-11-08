@@ -3,7 +3,7 @@ import ChatItem from "@/components/ChatItem";
 import { useAuthStore } from "@/libs/store/authStore";
 import { Chat } from "@/models/chat";
 import { useSocket } from "@/shared/hooks/use-socket";
-import { Redirect, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { MessageCirclePlus, Search } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
@@ -25,9 +25,9 @@ export default function Chats() {
   const { session } = useAuthStore();
   const router = useRouter();
 
-  if (!session) {
-    return <Redirect href={"/(auth)/login"} />;
-  }
+  // if (!session) {
+  //   return <Redirect href={"/(auth)/login"} />;
+  // }
 
   useEffect(() => {
     if (!socket) return;
