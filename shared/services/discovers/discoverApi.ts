@@ -14,15 +14,3 @@ export const useFindPeopleQuery = (enabled: boolean) => {
     enabled,
   });
 };
-
-export const useFindMomentsQuery = (enabled: boolean) => {
-  return useQuery({
-    queryKey: ["moments"],
-    queryFn: async () => {
-      const resp = await axiosBaseQuery(discoversEndpoints.findMoments());
-      console.log(resp);
-      return resp.data as Profile[];
-    },
-    enabled,
-  });
-};

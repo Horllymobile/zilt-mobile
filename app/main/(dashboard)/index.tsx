@@ -2,6 +2,7 @@
 import ChatItem from "@/components/ChatItem";
 import { useAuthStore } from "@/libs/store/authStore";
 import { Chat } from "@/models/chat";
+import { THEME } from "@/shared/constants/theme";
 import { useSocket } from "@/shared/hooks/use-socket";
 import { useRouter } from "expo-router";
 import { MessageCirclePlus, Search } from "lucide-react-native";
@@ -47,7 +48,11 @@ export default function Chats() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, justifyContent: "center", backgroundColor: "#fff" }}
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        backgroundColor: THEME.colors.background,
+      }}
     >
       <View
         style={{
@@ -58,12 +63,20 @@ export default function Chats() {
           paddingRight: 16,
         }}
       >
-        <Text style={{ fontSize: 24, fontWeight: "medium" }}>ZiltChat</Text>
+        <Text
+          style={{
+            fontSize: 24,
+            fontWeight: "medium",
+            color: THEME.colors.text,
+          }}
+        >
+          ZiltChat
+        </Text>
 
         <TouchableOpacity
           onPress={() => router.push("/main/(profile)/add-friend")}
         >
-          <MessageCirclePlus />
+          <MessageCirclePlus color={THEME.colors.text} />
         </TouchableOpacity>
         {/* <TouchableOpacity onPress={refresh}>
           <Loader />
@@ -75,8 +88,8 @@ export default function Chats() {
           style={{
             borderWidth: 0.5,
             borderRadius: 30,
-            backgroundColor: "#ffff",
-            borderColor: "#2C057A",
+            backgroundColor: THEME.colors.text,
+            borderColor: THEME.colors.background,
 
             marginTop: 10,
             padding: 10,

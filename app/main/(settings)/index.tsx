@@ -1,5 +1,6 @@
 "use client";
 import { useAuthStore } from "@/libs/store/authStore";
+import { THEME } from "@/shared/constants/theme";
 import { RelativePathString, router } from "expo-router";
 import {
   Bell,
@@ -30,31 +31,31 @@ export default function Settings() {
     {
       id: "notifications",
       name: "Notifications",
-      icon: <Bell size={24} />,
+      icon: <Bell size={24} color={THEME.colors.text} />,
       route: "./notifications",
     },
     {
       id: "privacy",
       name: "Privacy",
-      icon: <Shield size={24} />,
+      icon: <Shield size={24} color={THEME.colors.text} />,
       route: "./privacy",
     },
     {
       id: "language",
       name: "Laguage",
-      icon: <Languages size={24} />,
+      icon: <Languages size={24} color={THEME.colors.text} />,
       route: "./language",
     },
     {
       id: "help",
       name: "Help",
-      icon: <MessageCircleQuestionMark size={24} />,
+      icon: <MessageCircleQuestionMark size={24} color={THEME.colors.text} />,
       route: "./help",
     },
     {
       id: "about",
       name: "About",
-      icon: <Info size={24} />,
+      icon: <Info size={24} color={THEME.colors.text} />,
       route: "./about",
     },
     {
@@ -70,7 +71,12 @@ export default function Settings() {
   ];
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: THEME.colors.background,
+      }}
+    >
       <View
         style={{
           flexDirection: "row",
@@ -86,9 +92,17 @@ export default function Settings() {
               router.back();
             }}
           >
-            <ChevronLeft color="#2C057A" size={24} />
+            <ChevronLeft color={THEME.colors.text} size={24} />
           </TouchableOpacity>
-          <Text style={{ fontSize: 24, fontWeight: "medium" }}>Settings</Text>
+          <Text
+            style={{
+              fontSize: 24,
+              fontWeight: "medium",
+              color: THEME.colors.text,
+            }}
+          >
+            Settings
+          </Text>
         </View>
       </View>
 
@@ -118,14 +132,14 @@ export default function Settings() {
               <Text
                 style={{
                   fontSize: 16,
-                  color: setting.id === "logout" ? "red" : '"#2C057A"',
+                  color: setting.id === "logout" ? "red" : THEME.colors.text,
                 }}
               >
                 {setting.name}
               </Text>
               {setting.route && (
                 <ChevronLeft
-                  color="#ccc"
+                  color={THEME.colors.text}
                   size={20}
                   style={{
                     transform: [{ rotate: "180deg" }],

@@ -1,4 +1,5 @@
 import { BASE_URL } from "@/shared/constants/endpoints";
+// import query from "qs";
 
 export const discoversEndpoints = {
   findPeople: () => {
@@ -7,12 +8,7 @@ export const discoversEndpoints = {
       method: "get",
     };
   },
-  findMoments: () => {
-    return {
-      url: `${BASE_URL}/discovers/moments`,
-      method: "get",
-    };
-  },
+
   //   createChat: {
   //     url: `${BASE_URL}/chats`,
   //     method: "post",

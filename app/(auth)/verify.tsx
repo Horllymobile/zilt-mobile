@@ -1,3 +1,4 @@
+import { THEME } from "@/shared/constants/theme";
 import { router } from "expo-router";
 import {
   Dimensions,
@@ -8,20 +9,20 @@ import {
   TouchableHighlight,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Verify() {
   const { width } = Dimensions.get("window");
   return (
-    <View
+    <SafeAreaView
       style={{
         flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
+        backgroundColor: THEME.colors.background,
       }}
     >
       <Image
         source={require("../../assets/images/icon.png")}
-        style={{ width: 109.09, height: 101.67, marginBottom: 20 }}
+        style={{ width: 250, height: 250, marginBottom: 20 }}
         resizeMode="contain"
       />
 
@@ -52,7 +53,7 @@ export default function Verify() {
       <TouchableHighlight
         style={{
           marginTop: 30,
-          backgroundColor: "#2C057A",
+          backgroundColor: THEME.colors.primary,
           width: width - 40,
           height: 58,
           justifyContent: "center",
@@ -60,7 +61,7 @@ export default function Verify() {
           alignItems: "center",
           borderRadius: 20,
         }}
-        className="p-4 bg-[#2C057A] rounded-full"
+        className="p-4 rounded-full"
         onPress={() => {
           router.replace("/onboarding");
         }}
@@ -73,13 +74,12 @@ export default function Verify() {
               android: "itim",
               ios: "itim",
             }),
-            color: "white",
+            color: THEME.colors.text,
           }}
-          className="text-white"
         >
           Verify
         </Text>
       </TouchableHighlight>
-    </View>
+    </SafeAreaView>
   );
 }

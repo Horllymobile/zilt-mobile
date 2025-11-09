@@ -2,6 +2,7 @@
 import { Avatar } from "@/components/Avatar";
 import { useAuthStore } from "@/libs/store/authStore";
 import { PLACEHOLDER_CONSTANTS } from "@/shared/constants/placeholders";
+import { THEME } from "@/shared/constants/theme";
 import { router } from "expo-router";
 import { ChevronLeft, Link } from "lucide-react-native";
 import { Dimensions, Image, Text, TouchableOpacity, View } from "react-native";
@@ -13,7 +14,12 @@ export default function QrScan() {
   const { profile } = useAuthStore();
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: THEME.colors.background,
+      }}
+    >
       <View
         style={{
           marginTop: 10,
@@ -30,9 +36,15 @@ export default function QrScan() {
               router.back();
             }}
           >
-            <ChevronLeft color="#2C057A" size={24} />
+            <ChevronLeft color={THEME.colors.text} size={24} />
           </TouchableOpacity>
-          <Text style={{ fontSize: 18, fontWeight: "medium" }}>
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: "medium",
+              color: THEME.colors.text,
+            }}
+          >
             Scan QR Code
           </Text>
         </View>
@@ -45,7 +57,7 @@ export default function QrScan() {
           gap: 15,
           alignItems: "center",
           borderBottomWidth: 1,
-          borderBottomColor: "#ddd",
+          borderBottomColor: THEME.colors.text,
           paddingBottom: 20,
         }}
       >
@@ -83,7 +95,13 @@ export default function QrScan() {
         </View>
 
         <View style={{ alignItems: "center", gap: 5 }}>
-          <Text style={{ fontSize: 24, fontWeight: "bold" }}>
+          <Text
+            style={{
+              fontSize: 24,
+              fontWeight: "bold",
+              color: THEME.colors.text,
+            }}
+          >
             {profile?.name}
           </Text>
         </View>
@@ -92,9 +110,13 @@ export default function QrScan() {
       <View style={{ marginTop: 20, paddingHorizontal: 16, gap: 15 }}>
         <Text
           className="text-center"
-          style={{ fontSize: 24, textAlign: "center" }}
+          style={{
+            fontSize: 24,
+            textAlign: "center",
+            color: THEME.colors.text,
+          }}
         >
-          Scan the QR code to add a contact
+          Scan the QR code to start chatting
         </Text>
         {/* QR Code Scanner component would go here */}
         <Image
@@ -113,19 +135,19 @@ export default function QrScan() {
           style={{
             alignSelf: "center",
             marginTop: 10,
-            backgroundColor: "#2C057A",
+            backgroundColor: THEME.colors.surface,
             paddingHorizontal: 20,
             paddingVertical: 15,
             borderRadius: 15,
           }}
         >
           <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-            <Link color="white" size={18} />
+            <Link color={THEME.colors.text} size={18} />
             <Text
               style={{
                 fontSize: 16,
                 textAlign: "center",
-                color: "white",
+                color: THEME.colors.text,
                 fontWeight: "500",
               }}
             >

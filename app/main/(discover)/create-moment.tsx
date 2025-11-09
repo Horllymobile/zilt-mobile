@@ -1,28 +1,72 @@
+import { CreateTextMoment } from "@/components/CreateTextMoment";
+import FloatingActionButton from "@/components/FloatingActionButton";
 import { getRandomColor } from "@/libs/utils/colors";
-import { COLORS } from "@/shared/constants/color";
+import { THEME } from "@/shared/constants/theme";
+import { useSocket } from "@/shared/hooks/use-socket";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { Image, Pencil, Send, X } from "lucide-react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import FloatingActionButton from "../../../components/FloatingActionButton";
 
-export default function CreateMoment({
-  setModalVisible,
-  modalVisible,
-}: {
-  setModalVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  modalVisible: boolean;
-}) {
+const RANDOM_COLOR = getRandomColor();
+
+export default function CreateMoment() {
   const [type, setType] = useState("text");
   const router = useRouter();
+  const [isCreating, setIsCreating] = useState(false);
+
+  const pickImage = async () => {
+    // No permissions request is necessary for launching the image library
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      // onImageLoaded(result.assets[0].uri);
+      // router.dismiss();
+    }
+  };
+
+  const [content, setContent] = useState("");
+
+  const socket = useSocket();
+  useEffect(() => {
+    // SocketService.connect();
+    if (!socket) return;
+
+    // socket.emit("get_moments", { page: 1, size: 10 });
+    socket.on("moments:creating", (moments: { isCreating: boolean }) => {
+      // setMoments(moments);
+      setIsCreating(moments.isCreating);
+    });
+
+    return () => {
+      socket.off("moments:creating");
+    };
+  }, [socket]);
+
+  const createMoment = () => {
+    if (content.trim()) {
+      socket?.emit("create_moment", {
+        type: "text",
+        content,
+      });
+      setContent("");
+      // onCreate();
+      router.dismiss();
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -40,7 +84,7 @@ export default function CreateMoment({
                 }
               }}
             >
-              <X color={COLORS.primary} size={24} />
+              <X color={THEME.colors.text} size={24} />
             </TouchableOpacity>
           </View>
         </View>
@@ -53,29 +97,36 @@ export default function CreateMoment({
               styles.selectorButton,
               {
                 backgroundColor:
-                  type === "text" ? COLORS.primary : COLORS.white,
-                borderColor: type === "text" ? COLORS.white : COLORS.primary,
+                  type === "text" ? THEME.colors.primary : THEME.colors.text,
+                borderColor:
+                  type === "text" ? THEME.colors.text : THEME.colors.primary,
               },
             ]}
           >
             <Pencil
-              color={type === "text" ? COLORS.white : COLORS.primary}
+              color={type === "text" ? THEME.colors.text : THEME.colors.primary}
               size={28}
             />
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => setType("media")}
+            onPress={() => {
+              // setType("media");
+              pickImage();
+            }}
             style={[
               styles.selectorButton,
               {
                 backgroundColor:
-                  type === "media" ? COLORS.primary : COLORS.white,
-                borderColor: type === "media" ? COLORS.white : COLORS.primary,
+                  type === "media" ? THEME.colors.primary : THEME.colors.text,
+                borderColor:
+                  type === "media" ? THEME.colors.text : THEME.colors.primary,
               },
             ]}
           >
             <Image
-              color={type === "media" ? COLORS.white : COLORS.primary}
+              color={
+                type === "media" ? THEME.colors.text : THEME.colors.primary
+              }
               size={28}
             />
           </TouchableOpacity>
@@ -85,13 +136,13 @@ export default function CreateMoment({
               styles.selectorButton,
               {
                 backgroundColor:
-                  type === "live" ? COLORS.primary : COLORS.white,
-                borderColor: type === "live" ? COLORS.white : COLORS.primary,
+                  type === "live" ? THEME.colors.primary : THEME.colors.text,
+                borderColor: type === "live" ? THEME.colors.text : THEME.colors.primary,
               },
             ]}
           >
             <Video
-              color={type === "live" ? COLORS.white : COLORS.primary}
+              color={type === "live" ? THEME.colors.text : THEME.colors.primary}
               size={28}
             />
           </TouchableOpacity> */}
@@ -99,24 +150,20 @@ export default function CreateMoment({
 
         {/* TEXT INPUT */}
         {type === "text" && (
-          <View style={styles.textInputWrapper}>
-            <TextInput
-              style={styles.textInput}
-              multiline={true}
-              maxLength={700}
-              autoFocus={true}
-              placeholder="Type a moment"
-              placeholderTextColor={COLORS.white}
-              textAlign="center"
-              textAlignVertical="center"
-            />
-
-            <FloatingActionButton
-              icon={<Send color={COLORS.white} />}
-              onPress={() => setModalVisible(true)}
-            />
-          </View>
+          <CreateTextMoment
+            color={RANDOM_COLOR}
+            content={content}
+            setContent={setContent}
+          />
         )}
+
+        <FloatingActionButton
+          isLoading={isCreating}
+          disabled={!content || isCreating}
+          icon={<Send color={THEME.colors.text} />}
+          onPress={createMoment}
+          color={THEME.colors.primary}
+        />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -128,7 +175,7 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    backgroundColor: getRandomColor(),
+    backgroundColor: RANDOM_COLOR,
   },
   header: {
     paddingTop: 10,

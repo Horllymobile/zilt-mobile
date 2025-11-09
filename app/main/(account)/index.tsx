@@ -1,11 +1,12 @@
 "use client";
 
 import AvatarPicker from "@/components/AvatarPicker";
+import { WideButton } from "@/components/WideButton";
 import { useAuthStore } from "@/libs/store/authStore";
 import { supabase } from "@/libs/superbase";
 import { Profile } from "@/models/profile";
 import { IApiResponse } from "@/models/response";
-import { COLORS } from "@/shared/constants/color";
+import { THEME } from "@/shared/constants/theme";
 import { useDebounce } from "@/shared/hooks/use-debounce";
 import {
   useCheckNameQuery,
@@ -20,13 +21,11 @@ import { StatusBar } from "expo-status-bar";
 import { ChevronLeft } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Dimensions,
   Platform,
   Text,
   TextInput,
-  TouchableHighlight,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -78,7 +77,7 @@ export default function EditAccount() {
       });
 
       console.log(profile.avatar_url);
-      setImageUri(profile.avatar_url);
+      setImageUri(profile.avatar_url || profile.avatar || "");
       setName(profile?.name);
       setBio(profile?.bio);
     }
@@ -210,8 +209,7 @@ export default function EditAccount() {
     <SafeAreaView
       style={{
         flex: 1,
-        // justifyContent: "center",
-        // alignItems: "center",
+        backgroundColor: THEME.colors.background,
       }}
     >
       <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
@@ -230,9 +228,17 @@ export default function EditAccount() {
               router.back();
             }}
           >
-            <ChevronLeft color={COLORS.primary} size={24} />
+            <ChevronLeft color={THEME.colors.text} size={24} />
           </TouchableOpacity>
-          <Text style={{ fontSize: 18, fontWeight: "medium" }}>Back</Text>
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: "medium",
+              color: THEME.colors.text,
+            }}
+          >
+            Back
+          </Text>
         </View>
       </View>
       <View
@@ -242,7 +248,11 @@ export default function EditAccount() {
           alignItems: "center",
         }}
       >
-        <Text style={{ fontSize: 24, marginBottom: 30 }}>Edit Profile</Text>
+        <Text
+          style={{ fontSize: 24, marginBottom: 30, color: THEME.colors.text }}
+        >
+          Edit Profile
+        </Text>
         <AvatarPicker
           onImageLoaded={(url) => {
             setImageUri(url);
@@ -252,14 +262,15 @@ export default function EditAccount() {
         {/* <ImagePicker onImageLoaded={onImageLoaded} imageURI={imageUri} /> */}
 
         <View>
-          <Text>Username</Text>
+          <Text style={{ color: THEME.colors.text }}>Username</Text>
           <View
             style={{
               borderWidth: 0.2,
               borderRadius: 10,
               marginTop: 10,
               padding: 10,
-              height: 58,
+              height: 45,
+              borderColor: THEME.colors.text,
               width: width - 40,
             }}
           >
@@ -269,8 +280,10 @@ export default function EditAccount() {
                 width: width - 40,
                 borderWidth: 0,
                 borderRadius: 0,
+                color: THEME.colors.text,
               }}
               placeholder="Enter your username"
+              placeholderTextColor={THEME.colors.text}
               value={name}
               onChangeText={(n) => {
                 setName(n);
@@ -290,15 +303,16 @@ export default function EditAccount() {
           </Text>
         </View>
 
-        <View style={{ marginTop: 20 }}>
-          <Text>Bio</Text>
+        <View style={{ marginTop: 10 }}>
+          <Text style={{ color: THEME.colors.text }}>Bio</Text>
           <View
             style={{
               borderWidth: 0.2,
               borderRadius: 10,
               marginTop: 10,
               padding: 10,
-              height: 70,
+              height: 60,
+              borderColor: THEME.colors.text,
               width: width - 40,
               display: "flex",
               justifyContent: "center",
@@ -307,14 +321,15 @@ export default function EditAccount() {
           >
             <TextInput
               style={{
-                fontSize: 16,
+                fontSize: 14,
                 width: width - 40,
-                height: 70,
                 borderWidth: 0,
                 borderRadius: 0,
                 paddingHorizontal: 10,
+                color: THEME.colors.text,
               }}
               placeholder="Enter your bio"
+              placeholderTextColor={THEME.colors.text}
               value={bio}
               maxLength={100}
               onChangeText={setBio}
@@ -322,10 +337,10 @@ export default function EditAccount() {
           </View>
         </View>
 
-        <TouchableHighlight
+        <WideButton
           style={{
             marginTop: 30,
-            backgroundColor: COLORS.primary,
+            backgroundColor: THEME.colors.surface,
             width: width - 40,
             height: 58,
             justifyContent: "center",
@@ -340,25 +355,10 @@ export default function EditAccount() {
             isCheckingName
           }
           onPress={handleSubmit}
-        >
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: "normal",
-              fontFamily: Platform.select({
-                android: "itim",
-                ios: "itim",
-              }),
-              color: COLORS.white,
-            }}
-          >
-            {onboardingMutation.isPending || isUploading ? (
-              <ActivityIndicator color={COLORS.white} size={"small"} />
-            ) : (
-              "Submit"
-            )}
-          </Text>
-        </TouchableHighlight>
+          label="Save Changes"
+          width={width}
+          isLoading={onboardingMutation.isPending || isUploading}
+        />
       </View>
     </SafeAreaView>
   );

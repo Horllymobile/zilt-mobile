@@ -2,10 +2,11 @@ import { useAuthStore } from "@/libs/store/authStore";
 import { getColorFromString } from "@/libs/utils/colors";
 import { timeAgo } from "@/libs/utils/lib";
 import { Chat } from "@/models/chat";
-import { COLORS } from "@/shared/constants/color";
+import { THEME } from "@/shared/constants/theme";
 import { socketService } from "@/shared/services/socket";
 import { router } from "expo-router";
 import { Image } from "lucide-react-native";
+import { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { Avatar } from "./Avatar";
 
@@ -29,6 +30,38 @@ export default function ChatItem({ chat }: { chat: Chat }) {
 
   const isSender = chat?.lastMessage?.senderId === profile?.id;
 
+  const chatId = chat.id;
+
+  const [typingUserIds, setTypingUserIds] = useState<string[]>([]);
+
+  // console.log("Members", chat.members);
+
+  useEffect(() => {
+    // SocketService.connect();
+    if (!socket) return;
+
+    const eventKey = `chat:${chatId}:typing`;
+
+    socket.emit("join_chat", { chatId });
+
+    socket.on("chat:joined", ({ roomId, userId }) => {
+      // console.log("Joined Chat", roomId);
+    });
+
+    socket.on(eventKey, ({ userId, isTyping }) => {
+      // console.log(`User ${userId} is typing`);
+
+      setTypingUserIds((prev) => {
+        if (isTyping) return [...new Set([...prev, userId])];
+        return prev.filter((id) => id !== userId);
+      });
+    });
+
+    // return () => {
+    //   socket.off(eventKey);
+    // };
+  }, [socket, chatId]);
+
   return (
     <TouchableOpacity
       touchSoundDisabled={true}
@@ -41,7 +74,12 @@ export default function ChatItem({ chat }: { chat: Chat }) {
       }}
       onPress={() => {
         readMessage();
-        router.push(`/main/(chats)/${chat.id}`);
+        router.push({
+          pathname: `/main/(chats)/message`,
+          params: {
+            chat: JSON.stringify(chat),
+          },
+        });
       }}
     >
       {member?.user?.avatar_url ? (
@@ -63,7 +101,13 @@ export default function ChatItem({ chat }: { chat: Chat }) {
       ) : undefined}
       <View style={{ flex: 1 }}>
         {member?.user?.name ? (
-          <Text style={{ fontSize: 16, fontWeight: "600" }}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: "600",
+              color: THEME.colors.text,
+            }}
+          >
             {member?.user?.name}
           </Text>
         ) : undefined}
@@ -74,6 +118,7 @@ export default function ChatItem({ chat }: { chat: Chat }) {
               fontSize: 16,
               fontWeight: isNotSeen ? "600" : "200",
               marginTop: 5,
+              color: THEME.colors.text,
             }}
           >
             {isSender
@@ -109,13 +154,27 @@ export default function ChatItem({ chat }: { chat: Chat }) {
           <Text
             style={{
               fontSize: 12,
-              color: isNotSeen ? COLORS.primary : "#999",
+              color: THEME.colors.text,
               marginLeft: 8,
             }}
           >
             {timeAgo(chat.lastMessage?.createdAt)}
           </Text>
         ) : undefined}
+
+        {typingUserIds.length > 0 && (
+          <Text
+            style={{
+              fontStyle: "italic",
+              fontWeight: "600",
+              color: THEME.colors.text,
+              marginBottom: 4,
+              fontSize: 12,
+            }}
+          >
+            {!typingUserIds.includes(member?.id ?? "") ? `Typing...` : null}
+          </Text>
+        )}
 
         {unSeenMessages.length ? (
           <View
@@ -124,7 +183,7 @@ export default function ChatItem({ chat }: { chat: Chat }) {
               height: 15,
               borderRadius: 50,
               marginTop: 4,
-              backgroundColor: COLORS.primary,
+              backgroundColor: THEME.colors.primary,
               alignItems: "center",
               justifyContent: "center",
             }}
@@ -134,7 +193,7 @@ export default function ChatItem({ chat }: { chat: Chat }) {
                 fontSize: 9,
                 fontWeight: "600",
 
-                color: COLORS.white,
+                color: THEME.colors.text,
               }}
             >
               {unSeenMessages.length}

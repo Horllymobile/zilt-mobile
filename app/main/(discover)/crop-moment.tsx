@@ -1,4 +1,4 @@
-import { COLORS } from "@/shared/constants/color";
+import { THEME } from "@/shared/constants/theme";
 import * as ImageManipulator from "expo-image-manipulator";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { X } from "lucide-react-native";
@@ -182,7 +182,7 @@ export default function CropMoment() {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => router.back()}>
-            <X color={COLORS.primary} size={24} />
+            <X color={THEME.colors.text} size={24} />
           </TouchableOpacity>
           <Text style={styles.headerText}>Crop Zilt Moment</Text>
         </View>
@@ -232,7 +232,7 @@ export default function CropMoment() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.white },
+  container: { flex: 1, backgroundColor: THEME.colors.background },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -241,8 +241,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   headerLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
-  headerText: { color: COLORS.primary, fontSize: 16, fontWeight: "500" },
-  doneText: { color: COLORS.primary ?? "#00FFAA", fontWeight: "600" },
+  headerText: { color: THEME.colors.text, fontSize: 16, fontWeight: "500" },
+  doneText: { color: THEME.colors.text ?? "#00FFAA", fontWeight: "600" },
   imageContainer: {
     // flex: 1
   },
@@ -254,17 +254,17 @@ const styles = StyleSheet.create({
   cropBox: {
     position: "absolute",
     borderWidth: 2,
-    borderColor: COLORS.primary,
+    borderColor: THEME.colors.text,
     backgroundColor: "rgba(0,0,0,0.25)",
   },
   handle: {
     position: "absolute",
     width: 28,
     height: 28,
-    backgroundColor: COLORS.primary,
+    backgroundColor: THEME.colors.text,
     borderRadius: 14,
     borderWidth: 2,
-    borderColor: COLORS.white,
+    borderColor: THEME.colors.text,
   },
   tl: { top: -14, left: -14 },
   tr: { top: -14, right: -14 },

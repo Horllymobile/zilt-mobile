@@ -1,5 +1,5 @@
 import FloatingActionButton from "@/components/FloatingActionButton";
-import { COLORS } from "@/shared/constants/color";
+import { THEME } from "@/shared/constants/theme";
 import { Plus } from "lucide-react-native";
 import { Dimensions, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,7 +22,7 @@ export default function Events() {
       <Text style={styles.text}>👥 Events Nearby</Text>
 
       <FloatingActionButton
-        icon={<Plus color={COLORS.white} />}
+        icon={<Plus color={THEME.colors.text} />}
         onPress={() => {}}
       />
     </SafeAreaView>
@@ -34,31 +34,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: THEME.colors.primary,
   },
   text: {
     fontSize: 18,
     fontWeight: "600",
-    color: COLORS.primary,
-  },
-  tabbar: {
-    backgroundColor: "#fff",
-    elevation: 100,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  indicator: {
-    backgroundColor: COLORS.primary,
-    height: 3,
-    borderRadius: 3,
-  },
-  label: {
-    color: COLORS.primary,
-    // fontSize: 24,
-    fontWeight: "600",
-    textTransform: "none",
-  },
-  tab: {
-    width: initialLayout.width / 2,
+    color: THEME.colors.text,
   },
 });

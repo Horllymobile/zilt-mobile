@@ -3,6 +3,7 @@
 import AvatarPicker from "@/components/AvatarPicker";
 import { useAuthStore } from "@/libs/store/authStore";
 import { PLACEHOLDER_CONSTANTS } from "@/shared/constants/placeholders";
+import { THEME } from "@/shared/constants/theme";
 import { useDebounce } from "@/shared/hooks/use-debounce";
 import { useProfile } from "@/shared/hooks/use-profile";
 import {
@@ -24,6 +25,7 @@ import {
   TouchableHighlight,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Onboarding() {
   const router = useRouter();
@@ -43,13 +45,13 @@ export default function Onboarding() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (profile?.onboarded) {
-    router.replace("/main/(dashboard)/");
+    router.replace("/main/(dashboard)");
   }
 
   useEffect(() => {
     if (!session) router.replace("/(auth)/login");
     if (session && profile?.onboarded) {
-      router.replace("/main/(dashboard)/");
+      router.replace("/main/(dashboard)");
     }
   }, [profile, session]);
 
@@ -118,11 +120,12 @@ export default function Onboarding() {
     }
   };
   return (
-    <View
+    <SafeAreaView
       style={{
         flex: 1,
-        justifyContent: "center",
+        justifyContent: "space-evenly",
         alignItems: "center",
+        backgroundColor: THEME.colors.background,
       }}
     >
       <Text style={{ fontSize: 24, marginBottom: 30 }}>Account Setup</Text>
@@ -210,7 +213,7 @@ export default function Onboarding() {
       <TouchableHighlight
         style={{
           marginTop: 30,
-          backgroundColor: "#2C057A",
+          backgroundColor: THEME.colors.surface,
           width: width - 40,
           height: 58,
           justifyContent: "center",
@@ -219,7 +222,6 @@ export default function Onboarding() {
           borderRadius: 20,
         }}
         disabled={loading || !isValid || isUploading}
-        className="p-4 bg-[#2C057A] rounded-full"
         onPress={handleSubmit}
       >
         <Text
@@ -230,17 +232,16 @@ export default function Onboarding() {
               android: "itim",
               ios: "itim",
             }),
-            color: "white",
+            color: THEME.colors.text,
           }}
-          className="text-white"
         >
           {loading ? (
-            <ActivityIndicator size={"small"} color="white" />
+            <ActivityIndicator size={"small"} color={THEME.colors.text} />
           ) : (
             "Submit"
           )}
         </Text>
       </TouchableHighlight>
-    </View>
+    </SafeAreaView>
   );
 }

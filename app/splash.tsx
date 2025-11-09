@@ -1,7 +1,9 @@
 import { useAuthStore } from "@/libs/store/authStore";
+import { THEME } from "@/shared/constants/theme";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
-import { Image, Platform, Text, TouchableHighlight, View } from "react-native";
+import { Image, Platform, Text, TouchableHighlight } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Splash() {
   const { session } = useAuthStore();
@@ -9,22 +11,27 @@ export default function Splash() {
 
   useEffect(() => {
     if (!session) return;
-    if (session) {
-      router.replace("/main/(dashboard)/");
-      return;
-    }
+
+    const timer = setTimeout(() => {
+      if (session) {
+        router.replace("/main/(dashboard)");
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [session]);
   return (
-    <View
+    <SafeAreaView
       style={{
         flex: 1,
         justifyContent: "space-evenly",
         alignItems: "center",
+        backgroundColor: THEME.colors.background,
       }}
     >
       <Image
         source={require("../assets/images/icon.png")}
-        style={{ width: 150, height: 150, marginBottom: 20 }}
+        style={{ width: 250, height: 250, marginBottom: 20 }}
         resizeMode="contain"
       />
       <Text
@@ -35,6 +42,7 @@ export default function Splash() {
             android: "itim",
             ios: "itim",
           }),
+          color: THEME.colors.text,
         }}
       >
         Chat, Meet and Discover
@@ -42,7 +50,7 @@ export default function Splash() {
 
       <TouchableHighlight
         style={{
-          backgroundColor: "#2C057A",
+          backgroundColor: THEME.colors.surface,
           width: 309,
           height: 58,
           justifyContent: "center",
@@ -50,7 +58,6 @@ export default function Splash() {
           alignItems: "center",
           borderRadius: 100,
         }}
-        className="p-4 bg-[#2C057A] rounded-full"
         onPress={() => {
           // Handle sign-in action
           router.navigate("/(auth)/login");
@@ -64,13 +71,12 @@ export default function Splash() {
               android: "itim",
               ios: "itim",
             }),
-            color: "white",
+            color: THEME.colors.text,
           }}
-          className="text-white"
         >
           Sign In
         </Text>
       </TouchableHighlight>
-    </View>
+    </SafeAreaView>
   );
 }

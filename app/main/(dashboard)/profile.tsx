@@ -2,6 +2,7 @@
 import { Avatar } from "@/components/Avatar";
 import { useAuthStore } from "@/libs/store/authStore";
 import { getColorFromString } from "@/libs/utils/colors";
+import { THEME } from "@/shared/constants/theme";
 import { RelativePathString, router } from "expo-router";
 import { ChevronLeft, QrCode, Settings, User } from "lucide-react-native";
 import {
@@ -29,25 +30,25 @@ export default function Profile() {
     {
       id: "1",
       name: "Edit Account",
-      icon: <User color="#2C057A" size={24} />,
+      icon: <User color={THEME.colors.text} size={24} />,
       route: "../(account)",
     },
     {
       id: "6",
       name: "Settings",
-      icon: <Settings color="#2C057A" size={24} />,
+      icon: <Settings color={THEME.colors.text} size={24} />,
       route: "../(settings)",
     },
     // {
     //   id: "4",
     //   name: "Help",
-    //   icon: <MessageCircleQuestionMark color="#2C057A" size={24} />,
+    //   icon: <MessageCircleQuestionMark color={THEME.colors.primary,} size={24} />,
     //   route: "../help",
     // },
   ];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: THEME.colors.background }}>
       <View
         style={{
           flexDirection: "row",
@@ -60,7 +61,15 @@ export default function Profile() {
           height: 60,
         }}
       >
-        <Text style={{ fontSize: 24, fontWeight: "medium" }}>Profile</Text>
+        <Text
+          style={{
+            fontSize: 24,
+            fontWeight: "medium",
+            color: THEME.colors.text,
+          }}
+        >
+          Profile
+        </Text>
 
         {/* <TouchableOpacity onPress={() => {}}>
           <Search />
@@ -97,13 +106,23 @@ export default function Profile() {
 
         <View style={{ alignItems: "center", gap: 5 }}>
           <View style={{ alignItems: "center", gap: 5 }}>
-            <Text style={{ fontSize: 24, fontWeight: "bold" }}>
+            <Text
+              style={{
+                fontSize: 24,
+                fontWeight: "bold",
+                color: THEME.colors.text,
+              }}
+            >
               {profile?.name}
             </Text>
 
             {profile?.email && (
               <Text
-                style={{ fontSize: 16, fontWeight: "medium", color: "gray" }}
+                style={{
+                  fontSize: 16,
+                  fontWeight: "medium",
+                  color: THEME.colors.text,
+                }}
               >
                 {profile?.email}
               </Text>
@@ -117,7 +136,7 @@ export default function Profile() {
               underlayColor="none"
               style={{ padding: 5, borderRadius: 5 }}
             >
-              <Text style={{ fontSize: 16, color: "#666" }}>
+              <Text style={{ fontSize: 16, color: THEME.colors.text }}>
                 {profile?.bio}
               </Text>
             </TouchableHighlight>
@@ -127,9 +146,9 @@ export default function Profile() {
         <TouchableOpacity
           style={{
             marginTop: 10,
-            borderColor: "#2C057A",
+            borderColor: THEME.colors.text,
             borderWidth: 1,
-            backgroundColor: "#fff",
+            backgroundColor: THEME.colors.background,
             paddingVertical: 10,
             paddingHorizontal: 20,
             borderRadius: 8,
@@ -139,7 +158,7 @@ export default function Profile() {
             router.push("/main/(profile)/qr-scan");
           }}
         >
-          <QrCode />
+          <QrCode color={THEME.colors.text} />
         </TouchableOpacity>
       </View>
 
@@ -160,11 +179,11 @@ export default function Profile() {
               style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
             >
               {setting.icon}
-              <Text style={{ fontSize: 16, color: "#2C057A" }}>
+              <Text style={{ fontSize: 16, color: THEME.colors.text }}>
                 {setting.name}
               </Text>
               <ChevronLeft
-                color="#ccc"
+                color={THEME.colors.text}
                 size={20}
                 style={{
                   transform: [{ rotate: "180deg" }],

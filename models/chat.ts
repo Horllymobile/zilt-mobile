@@ -26,7 +26,7 @@ export interface Message {
   senderId: string;
 
   seen: boolean;
-  chat?: any;
+  chat?: Chat;
   sender?: Profile;
   chatAsLastMessage: string;
 

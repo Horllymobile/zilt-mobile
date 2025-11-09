@@ -6,6 +6,8 @@ class SocketService {
   private socket: Socket | null = null;
 
   private constructor() {}
+  private reconnectCallbacks: (() => void)[] = [];
+  private connectCallbacks: (() => void)[] = [];
 
   static getInstance() {
     if (!SocketService.instance) {
@@ -23,7 +25,13 @@ class SocketService {
       });
 
       this.socket.on("connect", () => {
-        console.log("✅ Connected to socket:", this.socket?.id);
+        // console.log("🔁 Reconnected after", attempt, "attempts");
+        this.connectCallbacks.forEach((cb) => cb());
+      });
+
+      this.socket.on("reconnect", (attempt) => {
+        console.log("🔁 Reconnected after", attempt, "attempts");
+        this.reconnectCallbacks.forEach((cb) => cb());
       });
 
       this.socket.on("disconnect", (reason) => {
@@ -31,6 +39,14 @@ class SocketService {
       });
     }
     return this.socket;
+  }
+
+  onReconnect(cb: () => void) {
+    this.reconnectCallbacks.push(cb);
+  }
+
+  onConnect(cb: () => void) {
+    this.connectCallbacks.push(cb);
   }
 
   getSocket() {

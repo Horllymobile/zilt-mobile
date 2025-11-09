@@ -2,7 +2,8 @@ export interface Profile {
   id: string;
   name: string;
   email: string;
-  avatar_url: string;
+  avatar?: string;
+  avatar_url?: string;
   bio: string;
   onboarded: boolean;
   lastSeen: string;

@@ -42,6 +42,24 @@ export const useLoginMutation = () => {
   });
 };
 
+export const useForgotPasswordMutation = () => {
+  return useMutation({
+    mutationFn: (data: { email: string }) =>
+      axiosBaseQuery({ ...authEndpoints.login, data }),
+    onSuccess: (resp: IApiResponse<ILoginReponse>) => {
+      // if (resp.data.profile.onboarded) {
+      //   router.replace("/main/(dashboard)/");
+      // } else {
+      //   router.replace("/onboarding");
+      // }
+    },
+    onError: (error: any) => {
+      // console.log(error);
+      // Alert.alert(formatErrorMessage(error));
+    },
+  });
+};
+
 export const useRegisterMutation = () => {
   const queryClient = useQueryClient();
 

@@ -1,4 +1,5 @@
 "use client";
+import { THEME } from "@/shared/constants/theme";
 import { router } from "expo-router";
 import { ChevronLeft } from "lucide-react-native";
 import { Dimensions, Text, TouchableOpacity, View } from "react-native";
@@ -8,7 +9,12 @@ export default function Privacy() {
   const { width } = Dimensions.get("window");
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: THEME.colors.background,
+      }}
+    >
       <View
         style={{
           flexDirection: "row",
@@ -24,9 +30,17 @@ export default function Privacy() {
               router.back();
             }}
           >
-            <ChevronLeft color="#2C057A" size={24} />
+            <ChevronLeft color={THEME.colors.text} size={24} />
           </TouchableOpacity>
-          <Text style={{ fontSize: 24, fontWeight: "medium" }}>Privacy</Text>
+          <Text
+            style={{
+              fontSize: 24,
+              fontWeight: "medium",
+              color: THEME.colors.text,
+            }}
+          >
+            Privacy
+          </Text>
         </View>
       </View>
     </SafeAreaView>

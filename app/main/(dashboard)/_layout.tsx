@@ -1,5 +1,4 @@
-import "@/global.css";
-import { COLORS } from "@/shared/constants/color";
+import { THEME } from "@/shared/constants/theme";
 import { Tabs } from "expo-router";
 import { MessageCircle, Telescope, User } from "lucide-react-native";
 import React from "react";
@@ -8,17 +7,17 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#fff",
+        tabBarActiveTintColor: THEME.colors.text,
         headerShown: false,
         tabBarIconStyle: { marginTop: 5 },
         tabBarLabelStyle: { marginBottom: 5, fontSize: 12 },
-        tabBarActiveBackgroundColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.primary,
+        tabBarActiveBackgroundColor: THEME.colors.background,
+        tabBarInactiveTintColor: THEME.colors.text,
         tabBarStyle: {
-          backgroundColor: COLORS.white,
-          borderTopColor: COLORS.primary,
+          backgroundColor: THEME.colors.surface,
+          borderTopColor: THEME.colors.text,
           paddingBottom: 0,
-          borderTopWidth: 1,
+          borderTopWidth: 2,
           height: 70,
         },
       }}

@@ -1,42 +1,62 @@
 import PeopleItem from "@/components/PeopleItem";
 import { COLORS } from "@/shared/constants/color";
 import { useFindPeopleQuery } from "@/shared/services/discovers/discoverApi";
-import { Dimensions, FlatList, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  Dimensions,
+  FlatList,
+  StyleSheet,
+  Text,
+  // TextInput,
+  View,
+} from "react-native";
 
 const initialLayout = {
   width: Dimensions.get("window").width,
   height: Dimensions.get("window").height,
 };
+
 export default function People() {
-  const { data: people, isFetching } = useFindPeopleQuery(true);
+  const { data: people, isFetching, refetch } = useFindPeopleQuery(true);
+  const [search, setSearch] = useState("");
 
-  //   console.log(people);
+  // Filter results locally based on search
+  const filteredPeople = search
+    ? people?.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
+    : people;
 
-  // if (isFetching) {
-  //   return <LoaderActivity />;
-  // }
   return (
-    <View style={styles.scene}>
-      {people ? (
+    <View style={styles.container}>
+      {/* Search Input */}
+      {/* <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search people nearby"
+          placeholderTextColor="#888"
+          value={search}
+          onChangeText={(text) => setSearch(text)}
+        />
+      </View> */}
+
+      {/* People List */}
+      {isFetching ? (
+        <View style={styles.loader}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </View>
+      ) : filteredPeople && filteredPeople.length > 0 ? (
         <FlatList
-          data={people || []}
-          keyExtractor={(chat) => chat.id}
+          data={filteredPeople}
+          keyExtractor={(item) => item.id}
           renderItem={({ item }) => <PeopleItem person={item} />}
-          contentContainerStyle={{
-            padding: 5,
-          }}
+          contentContainerStyle={{ padding: 10 }}
           ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+          onRefresh={refetch}
+          refreshing={isFetching}
         />
       ) : (
-        <View
-          style={{
-            height: initialLayout.height - 250,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Text>No people nearby</Text>
+        <View style={styles.empty}>
+          <Text style={{ color: "#555" }}>No people nearby</Text>
         </View>
       )}
     </View>
@@ -44,35 +64,30 @@ export default function People() {
 }
 
 const styles = StyleSheet.create({
-  scene: {
+  container: {
     flex: 1,
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
+    backgroundColor: "#E0F7FA", // light water/map-like background
+  },
+  searchContainer: {
+    padding: 10,
     backgroundColor: "#fff",
+    borderRadius: 12,
+    margin: 10,
+    elevation: 2,
   },
-  text: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: COLORS.primary,
+  searchInput: {
+    fontSize: 16,
+    color: "#333",
+    padding: 8,
   },
-  tabbar: {
-    backgroundColor: "#fff",
-    elevation: 100,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+  loader: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  indicator: {
-    backgroundColor: COLORS.primary,
-    height: 3,
-    borderRadius: 3,
-  },
-  label: {
-    color: COLORS.primary,
-    // fontSize: 24,
-    fontWeight: "600",
-    textTransform: "none",
-  },
-  tab: {
-    width: initialLayout.width / 2,
+  empty: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

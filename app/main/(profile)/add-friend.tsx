@@ -2,8 +2,8 @@
 import { Avatar } from "@/components/Avatar";
 import { useAuthStore } from "@/libs/store/authStore";
 import { ErrorResponse } from "@/models/response";
-import { COLORS } from "@/shared/constants/color";
 import { PLACEHOLDER_CONSTANTS } from "@/shared/constants/placeholders";
+import { THEME } from "@/shared/constants/theme";
 import { useFindFriendQuery } from "@/shared/services/auth/authApi";
 import { useCreateChatMutation } from "@/shared/services/chats/chatApi";
 import { useRouter } from "expo-router";
@@ -49,7 +49,12 @@ export default function AddFriend() {
         {
           onSuccess: (data) => {
             // console.log(data.data);
-            router.push(`/main/(chats)/${data.data.id}`);
+            router.push({
+              pathname: `/main/(chats)/message`,
+              params: {
+                chat: data,
+              },
+            });
           },
         }
       );
@@ -63,7 +68,12 @@ export default function AddFriend() {
   }, [isError, error]);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: THEME.colors.background,
+      }}
+    >
       <View
         style={{
           marginTop: 10,
@@ -80,7 +90,7 @@ export default function AddFriend() {
               router.back();
             }}
           >
-            <X color="#2C057A" size={24} />
+            <X color={THEME.colors.text} size={24} />
           </TouchableOpacity>
           {/* <Text style={{ fontSize: 18, fontWeight: "medium" }}>Back</Text> */}
         </View>
@@ -109,7 +119,7 @@ export default function AddFriend() {
             gap: 15,
             alignItems: "center",
             borderBottomWidth: 1,
-            borderBottomColor: "#ddd",
+            borderBottomColor: THEME.colors.background,
             paddingBottom: 20,
           }}
         >
@@ -129,7 +139,13 @@ export default function AddFriend() {
           />
 
           <View style={{ alignItems: "center", gap: 5 }}>
-            <Text style={{ fontSize: 24, fontWeight: "bold" }}>
+            <Text
+              style={{
+                fontSize: 24,
+                fontWeight: "bold",
+                color: THEME.colors.text,
+              }}
+            >
               {user?.name}
             </Text>
           </View>
@@ -138,7 +154,7 @@ export default function AddFriend() {
             style={{
               alignSelf: "center",
               marginTop: 10,
-              backgroundColor: "#2C057A",
+              backgroundColor: THEME.colors.surface,
               paddingHorizontal: 20,
               paddingVertical: 15,
               borderRadius: 15,
@@ -152,13 +168,13 @@ export default function AddFriend() {
               {createChatMutation.isPending ? (
                 <ActivityIndicator size={"small"} />
               ) : (
-                <MessageCircle color={COLORS.white} size={18} />
+                <MessageCircle color={THEME.colors.text} size={18} />
               )}
               <Text
                 style={{
                   fontSize: 16,
                   textAlign: "center",
-                  color: "white",
+                  color: THEME.colors.text,
                   fontWeight: "500",
                 }}
               >
@@ -172,9 +188,13 @@ export default function AddFriend() {
       <View style={{ marginTop: 20, paddingHorizontal: 16, gap: 15 }}>
         <Text
           className="text-center"
-          style={{ fontSize: 24, textAlign: "center" }}
+          style={{
+            fontSize: 20,
+            textAlign: "center",
+            color: THEME.colors.text,
+          }}
         >
-          Add a friend and start chatting
+          Search for friends and start chatting
         </Text>
         {/* QR Code Scanner component would go here */}
         <View>
@@ -184,8 +204,9 @@ export default function AddFriend() {
               borderRadius: 10,
               marginTop: 10,
               padding: 10,
-              height: 58,
+              height: 50,
               width: width - 40,
+              borderColor: THEME.colors.text,
             }}
           >
             <TextInput
@@ -194,10 +215,10 @@ export default function AddFriend() {
                 width: width - 40,
                 borderWidth: 0,
                 borderRadius: 0,
-                color: COLORS.black,
+                color: THEME.colors.text,
               }}
               placeholder="Enter your username"
-              placeholderTextColor={COLORS.black}
+              placeholderTextColor={THEME.colors.text}
               value={name}
               onChangeText={(n) => {
                 setName(n);
@@ -213,7 +234,7 @@ export default function AddFriend() {
           style={{
             alignSelf: "center",
             marginTop: 10,
-            backgroundColor: "#2C057A",
+            backgroundColor: THEME.colors.surface,
             paddingHorizontal: 20,
             paddingVertical: 15,
             borderRadius: 15,
@@ -223,16 +244,16 @@ export default function AddFriend() {
         >
           <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
             {isFetching ? (
-              <ActivityIndicator size={"small"} color="white" />
+              <ActivityIndicator size={"small"} color={THEME.colors.text} />
             ) : (
               <>
-                <Search color="white" size={18} />
+                <Search color={THEME.colors.text} size={18} />
 
                 <Text
                   style={{
                     fontSize: 16,
                     textAlign: "center",
-                    color: "white",
+                    color: THEME.colors.text,
                     fontWeight: "500",
                   }}
                 >

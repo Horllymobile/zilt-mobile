@@ -1,4 +1,5 @@
 import { getColorFromString } from "@/libs/utils/colors";
+import { THEME } from "@/shared/constants/theme";
 import {
   adventurer,
   avataaars,
@@ -10,8 +11,9 @@ import {
   personas,
 } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
+import { ChevronLeft, ChevronRight } from "lucide-react-native";
 import React, { useRef, useState } from "react";
-import { FlatList, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, TouchableOpacity, View } from "react-native";
 import { Avatar } from "./Avatar";
 
 type Props = {
@@ -78,7 +80,7 @@ export default function AvatarPicker({ onImageLoaded, imageURI }: Props) {
           height: 120,
           borderRadius: 75,
           borderWidth: 2,
-          borderColor: "#2C057A",
+          borderColor: THEME.colors.text,
           backgroundColor: getColorFromString(avatar),
           justifyContent: "center",
           alignItems: "center",
@@ -98,7 +100,7 @@ export default function AvatarPicker({ onImageLoaded, imageURI }: Props) {
         }}
       >
         <TouchableOpacity onPress={() => scrollTo("left")}>
-          <Text style={{ fontSize: 24, paddingHorizontal: 10 }}>◀</Text>
+          <ChevronLeft size={24} color={THEME.colors.text} />
         </TouchableOpacity>
 
         <FlatList
@@ -124,11 +126,13 @@ export default function AvatarPicker({ onImageLoaded, imageURI }: Props) {
                   width: 50,
                   height: 50,
                   borderRadius: 75,
+
                   borderWidth: 2,
-                  borderColor: "#2C057A",
+                  borderColor: THEME.colors.text,
                   justifyContent: "center",
                   alignItems: "center",
                   marginHorizontal: 5,
+                  backgroundColor: THEME.colors.surface,
                 }}
                 avatar_url={item}
                 width={40}
@@ -139,7 +143,7 @@ export default function AvatarPicker({ onImageLoaded, imageURI }: Props) {
         />
 
         <TouchableOpacity onPress={() => scrollTo("right")}>
-          <Text style={{ fontSize: 24, paddingHorizontal: 10 }}>▶</Text>
+          <ChevronRight size={24} color={THEME.colors.text} />
         </TouchableOpacity>
       </View>
     </View>

@@ -11,7 +11,11 @@ let refreshPromise: Promise<string | null> | null = null;
 export async function refreshAccessToken(
   token?: string
 ): Promise<string | null> {
-  const { session: currentSession, setAuthData } = useAuthStore.getState();
+  const {
+    session: currentSession,
+    setAuthData,
+    profile,
+  } = useAuthStore.getState();
   if (!currentSession?.refresh) return null;
 
   if (refreshPromise) return refreshPromise;
@@ -22,8 +26,8 @@ export async function refreshAccessToken(
         token: currentSession.refresh || token,
       });
 
-      const { session, profile } = res.data.data;
-      console.log("Session", session);
+      const session = res.data.data;
+      console.log("Refresh Access Token Session", session);
 
       setAuthData({
         profile,
@@ -34,8 +38,8 @@ export async function refreshAccessToken(
     } catch (err) {
       console.log("Error", err);
       setAuthData({
-        profile: null,
-        session: null,
+        profile: undefined,
+        session: undefined,
       });
       return null;
     } finally {

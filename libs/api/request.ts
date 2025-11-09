@@ -1,4 +1,5 @@
 import axios, { AxiosError, AxiosRequestConfig } from "axios";
+import { router } from "expo-router";
 import { Alert } from "react-native";
 import { refreshAccessToken } from "../api/refresh";
 import { useAuthStore } from "../store/authStore";
@@ -17,7 +18,7 @@ export const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   async (request) => {
-    const { session, logout } = useAuthStore.getState();
+    const { session } = useAuthStore.getState();
     let token = session?.token;
 
     if (!token) {
@@ -43,8 +44,6 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config;
     const { logout } = useAuthStore.getState();
 
-    console.log(error.response.status);
-
     // Handle expired token
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
@@ -54,6 +53,7 @@ axiosInstance.interceptors.response.use(
         return axiosInstance(originalRequest);
       } else {
         logout?.();
+        router.navigate("/(auth)/login");
       }
     }
 

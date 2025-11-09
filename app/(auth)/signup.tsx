@@ -1,19 +1,19 @@
+import { EmailInput } from "@/components/EmailInput";
+import { PasswordInput } from "@/components/PasswordInput";
+import { WideButton } from "@/components/WideButton";
 import { useAuthStore } from "@/libs/store/authStore";
+import { THEME } from "@/shared/constants/theme";
 import { useRegisterMutation } from "@/shared/services/auth/authApi";
 import { Redirect, router } from "expo-router";
-import { Eye, EyeOff } from "lucide-react-native";
 import { useState } from "react";
 import {
-  ActivityIndicator,
   Dimensions,
   Image,
   Platform,
   Text,
-  TextInput,
   TouchableHighlight,
-  TouchableOpacity,
-  View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SignUp() {
   const { width } = Dimensions.get("window");
@@ -51,131 +51,55 @@ export default function SignUp() {
       }
     );
   };
+  const isValid = email !== "" && password !== "";
   return (
-    <View
+    <SafeAreaView
       style={{
         flex: 1,
+        // justifyContent: "space-evenly",
         justifyContent: "center",
+        gap: 20,
         alignItems: "center",
+        backgroundColor: THEME.colors.background,
       }}
     >
       <Image
         source={require("../../assets/images/icon.png")}
-        style={{ width: 109.09, height: 101.67, marginBottom: 20 }}
+        style={{ width: 250, height: 250, marginBottom: 20 }}
         resizeMode="contain"
       />
 
-      <View style={{ marginTop: 20 }}>
-        <Text>Email</Text>
-        <View
-          style={{
-            borderWidth: 0.2,
-            borderRadius: 10,
-            marginTop: 10,
-            padding: 10,
-            height: 58,
-            width: width - 40,
-          }}
-        >
-          <TextInput
-            keyboardType="email-address"
-            value={email}
-            onChangeText={(e) => setEmail(e)}
-            placeholder="Enter your email address"
-            style={{
-              fontSize: 16,
-              width: width - 40,
-              borderWidth: 0,
-              borderRadius: 0,
-            }}
-          />
-        </View>
-      </View>
+      <EmailInput email={email} setEmail={setEmail} width={width} />
 
-      <View style={{ marginTop: 20 }}>
-        <Text>Password</Text>
-        <View
-          style={{
-            borderWidth: 0.2,
-            borderRadius: 10,
-            marginTop: 10,
-            padding: 10,
-            height: 58,
-            width: width - 40,
-            position: "relative",
-          }}
-        >
-          <TextInput
-            secureTextEntry={!showPassword} // 👈 this hides text with •••
-            autoCapitalize="none" // 👈 prevent auto-capitalization
-            autoCorrect={false} // 👈 prevent autocorrect
-            value={password}
-            onChangeText={(e) => setPassword(e)}
-            placeholder="Enter your password"
-            style={{
-              fontSize: 16,
-              width: width - 40,
-              borderWidth: 0,
-              borderRadius: 0,
-            }}
-          />
-          <TouchableOpacity
-            style={{
-              position: "absolute",
-              top: 12,
-              right: 5,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-            onPress={() => {
-              setShowPassword(!showPassword);
-            }}
-          >
-            {showPassword ? <EyeOff size={28} /> : <Eye size={28} />}
-          </TouchableOpacity>
-        </View>
-      </View>
+      <PasswordInput
+        password={password}
+        setPassword={setPassword}
+        width={width}
+      />
 
-      <TouchableHighlight
+      <WideButton
         style={{
-          marginTop: 30,
-          backgroundColor: "#2C057A",
+          marginTop: 10,
+          backgroundColor: isValid
+            ? THEME.colors.surface
+            : THEME.colors.backdrop,
           width: width - 40,
-          height: 58,
+          height: 50,
           justifyContent: "center",
           display: "flex",
           alignItems: "center",
           borderRadius: 20,
         }}
-        className="p-4 bg-[#2C057A] rounded-full"
-        disabled={registerMutation.isPending}
+        isLoading={registerMutation.isPending}
+        label="Sign Up"
+        width={width}
+        disabled={registerMutation.isPending || !isValid}
         onPress={() => {
           handleSubmit();
         }}
-      >
-        <Text
-          style={{
-            fontSize: 18,
-            fontWeight: "normal",
-            fontFamily: Platform.select({
-              android: "itim",
-              ios: "itim",
-            }),
-            color: "white",
-          }}
-          className="text-white"
-        >
-          {registerMutation.isPending ? (
-            <ActivityIndicator size={"small"} color="white" />
-          ) : (
-            "Sign Up"
-          )}
-        </Text>
-      </TouchableHighlight>
+      />
 
       <TouchableHighlight
-        className="p-4 mt-5"
         style={{
           marginTop: 10,
         }}
@@ -186,19 +110,18 @@ export default function SignUp() {
       >
         <Text
           style={{
-            fontSize: 18,
+            fontSize: 14,
             fontWeight: "normal",
             fontFamily: Platform.select({
               android: "itim",
               ios: "itim",
             }),
-            color: "#2C057A",
+            color: THEME.colors.text,
           }}
-          className="text-white"
         >
-          Login
+          Already have an account? Login
         </Text>
       </TouchableHighlight>
-    </View>
+    </SafeAreaView>
   );
 }

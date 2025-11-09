@@ -1,16 +1,30 @@
+import { THEME } from "@/shared/constants/theme";
 import React, { JSX } from "react";
-import { StyleSheet, TouchableOpacity } from "react-native";
+import { ActivityIndicator, StyleSheet, TouchableOpacity } from "react-native";
 
 export default function FloatingActionButton({
   onPress,
   icon,
+  disabled,
+  isLoading,
+  color,
 }: {
   onPress: () => void;
   icon: JSX.Element;
+  disabled?: boolean;
+  isLoading?: boolean;
+  color?: string;
 }) {
   return (
-    <TouchableOpacity style={styles.fab} onPress={onPress}>
-      {icon}
+    <TouchableOpacity
+      disabled={disabled}
+      style={[
+        styles.fab,
+        { backgroundColor: !disabled ? color : THEME.colors.surfaceDisabled },
+      ]}
+      onPress={onPress}
+    >
+      {isLoading ? <ActivityIndicator size={"small"} /> : icon}
     </TouchableOpacity>
   );
 }
@@ -23,7 +37,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#2C057A",
+    // backgroundColor: COLORS.primary,
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
