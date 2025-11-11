@@ -78,7 +78,8 @@
             "node_modules/@expo-google-fonts/roboto/800ExtraBold/Roboto_800ExtraBold.ttf"
           ]
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true,
