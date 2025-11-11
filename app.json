@@ -22,9 +22,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "permissions": [
-        "android.permission.RECORD_AUDIO"
-      ],
+      "permissions": ["android.permission.RECORD_AUDIO"],
       "package": "com.horllymobile.ziltchat",
       "intentFilters": [
         {
@@ -38,10 +36,7 @@
               "scheme": "ziltchat"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ]
     },
@@ -76,8 +71,6 @@
         {
           "fonts": [
             "node_modules/@expo-google-fonts/itim/400Regular/Itim_400Regular.ttf",
-            "node_modules/@expo-google-fonts/itim/300Light/Itim_300Light.ttf",
-            "node_modules/@expo-google-fonts/itim/200ExtraLight/Itim_200ExtraLight.ttf",
             "node_modules/@expo-google-fonts/roboto/400Regular/Roboto_400Regular.ttf",
             "node_modules/@expo-google-fonts/roboto/500Medium/Roboto_500Medium.ttf",
             "node_modules/@expo-google-fonts/roboto/700SemiBold/Roboto_600SemiBold.ttf",
