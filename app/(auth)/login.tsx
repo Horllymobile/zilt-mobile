@@ -21,7 +21,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as z from "zod";
 
 const loginSchema = z.object({
-  email: z.email("Email is invalid"),
+  email: z.string().email("Email is invalid"),
   password: z.string().min(8, "Password must be at least 8 characters long"),
 });
 
