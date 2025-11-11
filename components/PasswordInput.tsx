@@ -7,12 +7,18 @@ type PasswordInputProps = {
   password: string;
   setPassword: (password: string) => void;
   width: number;
+  onBlur?: () => void;
+  label: string;
+  placeholder?: string;
 };
 
 export function PasswordInput({
   password,
   setPassword,
   width,
+  onBlur,
+  label,
+  placeholder,
 }: PasswordInputProps) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -23,15 +29,17 @@ export function PasswordInput({
           color: THEME.colors.text,
         }}
       >
-        Password
+        {label}
       </Text>
       <View
         style={{
           borderWidth: 0.2,
           borderRadius: 10,
           marginTop: 10,
-          padding: 10,
-          height: 40,
+          paddingTop: 5,
+          paddingBottom: 5,
+          paddingHorizontal: 10,
+          height: 50,
           width: width - 40,
           position: "relative",
           borderColor: THEME.colors.text,
@@ -43,12 +51,14 @@ export function PasswordInput({
           autoCorrect={false} // 👈 prevent autocorrect
           value={password}
           onChangeText={(e) => setPassword(e)}
-          placeholder="Enter your password"
-          placeholderTextColor={THEME.colors.textPlaceholder}
+          placeholder={placeholder}
+          placeholderTextColor={THEME.colors.text}
+          onBlur={onBlur}
           style={{
             fontSize: 16,
-            width: width - 40,
+            // width: width - 40,
             borderWidth: 0,
+            height: 40,
             borderRadius: 0,
             color: THEME.colors.text,
           }}
@@ -56,7 +66,7 @@ export function PasswordInput({
         <TouchableOpacity
           style={{
             position: "absolute",
-            top: 5,
+            top: 10,
             right: 5,
             display: "flex",
             justifyContent: "center",

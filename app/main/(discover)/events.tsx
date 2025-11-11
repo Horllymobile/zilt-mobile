@@ -1,7 +1,8 @@
+import EmptyState from "@/components/EmptyState";
 import FloatingActionButton from "@/components/FloatingActionButton";
 import { THEME } from "@/shared/constants/theme";
 import { Plus } from "lucide-react-native";
-import { Dimensions, StyleSheet, Text } from "react-native";
+import { Dimensions, StyleSheet, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const initialLayout = {
@@ -19,9 +20,27 @@ export default function Events() {
   // }
   return (
     <SafeAreaView style={styles.scene}>
-      <Text style={styles.text}>👥 Events Nearby</Text>
+      <EmptyState
+        label="No Events Nearby. Tap to create!"
+        trigger={
+          <TouchableOpacity
+            style={{
+              backgroundColor: THEME.colors.primary,
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+              borderRadius: 50,
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+            onPress={() => {}}
+          >
+            <Plus color={THEME.colors.text} />
+          </TouchableOpacity>
+        }
+      />
 
       <FloatingActionButton
+        color={THEME.colors.surface}
         icon={<Plus color={THEME.colors.text} />}
         onPress={() => {}}
       />
@@ -34,7 +53,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: THEME.colors.primary,
+    backgroundColor: THEME.colors.background,
   },
   text: {
     fontSize: 18,

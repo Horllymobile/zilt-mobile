@@ -1,13 +1,14 @@
+import EmptyState from "@/components/EmptyState";
 import PeopleItem from "@/components/PeopleItem";
-import { COLORS } from "@/shared/constants/color";
+import PeopleSkeletonList from "@/components/PeopleSkeletonList";
+import { THEME } from "@/shared/constants/theme";
 import { useFindPeopleQuery } from "@/shared/services/discovers/discoverApi";
 import { useState } from "react";
 import {
-  ActivityIndicator,
   Dimensions,
   FlatList,
+  ScrollView,
   StyleSheet,
-  Text,
   // TextInput,
   View,
 } from "react-native";
@@ -20,6 +21,7 @@ const initialLayout = {
 export default function People() {
   const { data: people, isFetching, refetch } = useFindPeopleQuery(true);
   const [search, setSearch] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   // Filter results locally based on search
   const filteredPeople = search
@@ -41,9 +43,9 @@ export default function People() {
 
       {/* People List */}
       {isFetching ? (
-        <View style={styles.loader}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-        </View>
+        <ScrollView style={{ flex: 1 }}>
+          <PeopleSkeletonList items={8} />
+        </ScrollView>
       ) : filteredPeople && filteredPeople.length > 0 ? (
         <FlatList
           data={filteredPeople}
@@ -55,9 +57,10 @@ export default function People() {
           refreshing={isFetching}
         />
       ) : (
-        <View style={styles.empty}>
-          <Text style={{ color: "#555" }}>No people nearby</Text>
-        </View>
+        <EmptyState label="No people nearby, try adjust your search" />
+        // <View style={styles.empty}>
+        //   <Text style={{ color: "#555" }}>No people nearby</Text>
+        // </View>
       )}
     </View>
   );
@@ -66,7 +69,7 @@ export default function People() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#E0F7FA", // light water/map-like background
+    backgroundColor: THEME.colors.background, // light water/map-like background
   },
   searchContainer: {
     padding: 10,

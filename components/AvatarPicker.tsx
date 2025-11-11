@@ -18,10 +18,10 @@ import { Avatar } from "./Avatar";
 
 type Props = {
   imageURI: string;
-  onImageLoaded: (url: string) => void;
+  onSelect: (avatar: string) => void;
 };
 
-export default function AvatarPicker({ onImageLoaded, imageURI }: Props) {
+export default function AvatarPicker({ onSelect, imageURI }: Props) {
   const [avatars] = useState(() => {
     const seeds = [
       "alpha",
@@ -118,7 +118,7 @@ export default function AvatarPicker({ onImageLoaded, imageURI }: Props) {
             <TouchableOpacity
               onPress={() => {
                 setAvatar(item);
-                onImageLoaded(item);
+                onSelect(item);
               }}
             >
               <Avatar

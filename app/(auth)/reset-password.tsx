@@ -1,9 +1,8 @@
-import { EmailInput } from "@/components/EmailInput";
 import { PasswordInput } from "@/components/PasswordInput";
 import { WideButton } from "@/components/WideButton";
 import { useAuthStore } from "@/libs/store/authStore";
 import { THEME } from "@/shared/constants/theme";
-import { useLoginMutation } from "@/shared/services/auth/authApi";
+import { useResetPasswordMutation } from "@/shared/services/auth/authApi";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Redirect, router } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
@@ -18,39 +17,48 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as z from "zod";
+import { z } from "zod";
 
-const loginSchema = z.object({
-  email: z.email("Email is invalid"),
-  password: z.string().min(8, "Password must be at least 8 characters long"),
-});
+// 🧠 Define schema
+const signUpSchema = z
+  .object({
+    password: z.string().min(6, "Password must be at least 6 characters long"),
+    confirmPassword: z.string().min(6, "Please confirm your password"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Passwords do not match",
+  });
 
-type LoginFormData = z.infer<typeof loginSchema>;
+type SignUpFormData = z.infer<typeof signUpSchema>;
 
-export default function Login() {
+export default function ResetPassword() {
   const { width } = Dimensions.get("window");
   const { session } = useAuthStore();
-  const loginMutation = useLoginMutation();
+  const registerMutation = useResetPasswordMutation();
 
-  // ⚙️ Setup react-hook-form with zodResolver
   const {
     control,
     handleSubmit,
     formState: { errors, isValid },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema as any),
-    mode: "onChange", // validate in real time
+    reset,
+  } = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema as any),
+    mode: "onChange",
   });
 
   if (session) {
     return <Redirect href={"/main/(dashboard)"} />;
   }
 
-  const onSubmit = (data: LoginFormData) => {
-    loginMutation.mutate({
-      email: data.email.toLowerCase(),
-      password: data.password,
-    });
+  const onSubmit = (data: SignUpFormData) => {
+    registerMutation.mutate(
+      {
+        token: "",
+        password: data.password,
+      },
+      { onSuccess: () => reset() }
+    );
   };
 
   return (
@@ -73,48 +81,19 @@ export default function Login() {
         >
           <Image
             source={require("../../assets/images/icon.png")}
-            style={{ width: 250, height: 250, marginBottom: 10 }}
+            style={{ width: 250, height: 250, marginBottom: 20 }}
             resizeMode="contain"
           />
 
-          {/* 📧 Email Field */}
-          <View style={{ width: width - 40 }}>
-            <Controller
-              control={control}
-              name="email"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <EmailInput
-                  label="Email"
-                  placeholder="Enter your email address"
-                  email={value}
-                  setEmail={(em) => onChange(em.toLowerCase())}
-                  width={width}
-                  onBlur={onBlur}
-                />
-              )}
-            />
-            {errors.email && (
-              <Text
-                style={{
-                  color: THEME.colors.error,
-                  fontSize: 12,
-                  marginTop: 4,
-                }}
-              >
-                {errors.email.message}
-              </Text>
-            )}
-          </View>
-
-          {/* 🔒 Password Field */}
+          {/* 🔑 Password */}
           <View style={{ width: width - 40 }}>
             <Controller
               control={control}
               name="password"
               render={({ field: { onChange, onBlur, value } }) => (
                 <PasswordInput
-                  label="Password"
-                  placeholder="Enter your password"
+                  label="New Password"
+                  placeholder="Enter new password"
                   password={value}
                   setPassword={onChange}
                   width={width}
@@ -135,7 +114,36 @@ export default function Login() {
             )}
           </View>
 
-          {/* 🚀 Login Button */}
+          {/* 🔒 Confirm Password */}
+          <View style={{ width: width - 40 }}>
+            <Controller
+              control={control}
+              name="confirmPassword"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <PasswordInput
+                  label="Confirm Password"
+                  placeholder="Confirm your password"
+                  password={value}
+                  setPassword={onChange}
+                  width={width}
+                  onBlur={onBlur}
+                />
+              )}
+            />
+            {errors.confirmPassword && (
+              <Text
+                style={{
+                  color: THEME.colors.error,
+                  fontSize: 12,
+                  marginTop: 4,
+                }}
+              >
+                {errors.confirmPassword.message}
+              </Text>
+            )}
+          </View>
+
+          {/* 🚀 Submit */}
           <WideButton
             style={{
               marginTop: 10,
@@ -148,60 +156,30 @@ export default function Login() {
               alignItems: "center",
               borderRadius: 20,
             }}
-            isLoading={loginMutation.isPending}
-            label="Login"
+            isLoading={registerMutation.isPending}
+            label="Reset"
             width={width}
-            disabled={loginMutation.isPending || !isValid}
+            disabled={registerMutation.isPending || !isValid}
             onPress={handleSubmit(onSubmit)}
           />
 
-          {/* 🔑 Forgot Password */}
+          {/* 🔁 Already have account */}
           <TouchableHighlight
-            style={{ marginTop: 5 }}
-            onPress={() => router.navigate("/(auth)/forget-password")}
-            disabled={loginMutation.isPending}
+            style={{ marginTop: 10 }}
+            onPress={() => router.navigate("/(auth)/login")}
+            disabled={registerMutation.isPending}
           >
             <Text
               style={{
                 fontSize: 14,
-                fontFamily: Platform.select({ android: "itim", ios: "itim" }),
+                fontFamily: Platform.select({
+                  android: "itim",
+                  ios: "itim",
+                }),
                 color: THEME.colors.text,
               }}
             >
-              Forgot Password?
-            </Text>
-          </TouchableHighlight>
-
-          {/* 🧾 Signup Link */}
-          <TouchableHighlight
-            style={{ marginTop: 5 }}
-            disabled={loginMutation.isPending}
-            onPress={() => router.navigate("/(auth)/signup")}
-          >
-            <Text
-              style={{
-                fontSize: 14,
-                fontFamily: Platform.select({ android: "itim", ios: "itim" }),
-                color: THEME.colors.text,
-              }}
-            >
-              Don’t have an account? Sign Up
-            </Text>
-          </TouchableHighlight>
-
-          <TouchableHighlight
-            style={{ marginTop: 5 }}
-            disabled={loginMutation.isPending}
-            onPress={() => router.navigate("/(auth)/reset-password")}
-          >
-            <Text
-              style={{
-                fontSize: 14,
-                fontFamily: Platform.select({ android: "itim", ios: "itim" }),
-                color: THEME.colors.text,
-              }}
-            >
-              Reset
+              Login
             </Text>
           </TouchableHighlight>
         </ScrollView>

@@ -37,10 +37,11 @@ export default function Discover() {
 
   return (
     <SafeAreaView
+      edges={["top"]}
       style={{
         flex: 1,
+        justifyContent: "center",
         backgroundColor: THEME.colors.background,
-        paddingVertical: 0,
       }}
     >
       <View

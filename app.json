@@ -22,8 +22,28 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "permissions": ["android.permission.RECORD_AUDIO"],
-      "package": "com.horllymobile.ziltchat"
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.horllymobile.ziltchat",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "https",
+              "host": "ziltchat.app"
+            },
+            {
+              "scheme": "ziltchat"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -35,13 +55,13 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash.png",
-          "resizeMode": "cover",
-          "backgroundColor": "#ffffff",
+          "image": "./assets/images/icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#553636",
           "dark": {
-            "image": "./assets/images/splash-dark.png",
-            "resizeMode": "cover",
-            "backgroundColor": "#000000"
+            "image": "./assets/images/icon.png",
+            "resizeMode": "contain",
+            "backgroundColor": "#553636"
           }
         }
       ],
@@ -70,6 +90,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "a68470f1-e26c-4652-adb3-19e1f8b6e52d"
+      }
     }
   }
 }

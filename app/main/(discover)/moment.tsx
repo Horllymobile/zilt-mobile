@@ -1,5 +1,7 @@
+import EmptyState from "@/components/EmptyState";
 import FloatingActionButton from "@/components/FloatingActionButton";
 import MomentCard from "@/components/MomentCard";
+import MomentCardSkeletonList from "@/components/MomentCardSkeletonList";
 import { useAuthStore } from "@/libs/store/authStore";
 import { Moment } from "@/models/moments";
 import { THEME } from "@/shared/constants/theme";
@@ -10,6 +12,7 @@ import { useEffect, useState } from "react";
 import {
   Dimensions,
   FlatList,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -24,6 +27,7 @@ const initialLayout = {
 export default function MomentPage() {
   const [modalVisible, setModalVisible] = useState(false);
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
 
   const [moments, setMoments] = useState<Moment[]>([]);
   const { profile } = useAuthStore();
@@ -48,6 +52,7 @@ export default function MomentPage() {
     socket.emit("get_moments", { page: 1, size: 10 });
     socket.on("moments:get_many", (moments: Moment[]) => {
       setMoments(moments);
+      setIsLoading(false);
     });
 
     return () => {
@@ -57,46 +62,58 @@ export default function MomentPage() {
 
   return (
     <View style={styles.safeArea}>
-      {moments?.length ? (
-        <FlatList
-          data={moments}
-          keyExtractor={(item) => item?.id}
-          renderItem={({ item }) => (
-            <MomentCard
-              key={item.id}
-              moment={item}
-              onPress={() => {
-                router.navigate({
-                  pathname: "/main/(discover)/moment-detail",
-                  params: {
-                    momentId: item.id,
-                  },
-                });
-              }}
+      {isLoading ? (
+        <ScrollView style={{ flex: 1 }}>
+          <MomentCardSkeletonList items={8} />
+        </ScrollView>
+      ) : (
+        <>
+          {moments?.length ? (
+            <FlatList
+              data={moments}
+              keyExtractor={(item) => item?.id}
+              renderItem={({ item }) => (
+                <MomentCard
+                  key={item.id}
+                  moment={item}
+                  onPress={() => {
+                    router.navigate({
+                      pathname: "/main/(discover)/moment-detail",
+                      params: {
+                        momentId: item.id,
+                      },
+                    });
+                  }}
+                />
+              )}
+              ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+            />
+          ) : (
+            <EmptyState
+              label="No Moments yet. Tap below to create one!"
+              trigger={
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: THEME.colors.primary,
+                    paddingHorizontal: 20,
+                    paddingVertical: 10,
+                    borderRadius: 25,
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                  onPress={() => router.push("/main/(discover)/create-moment")}
+                >
+                  <Zap />
+                  <Text style={{ color: "#fff", marginLeft: 8 }}>
+                    New Moment
+                  </Text>
+                </TouchableOpacity>
+              }
             />
           )}
-          ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-        />
-      ) : (
-        <View
-          style={{
-            // height: height - 250,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Text>
-            No Moment, Click{"  "}
-            <TouchableOpacity
-            // onPress={() => router.push("/main/(profile)/add-friend")}
-            >
-              <Zap />
-            </TouchableOpacity>
-            {"  "}to create
-          </Text>
-        </View>
+        </>
       )}
+
       <FloatingActionButton
         color={THEME.colors.background}
         icon={<Zap color={THEME.colors.text} />}

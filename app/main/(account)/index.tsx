@@ -14,10 +14,10 @@ import {
   useOnboardingMutation,
 } from "@/shared/services/auth/authApi";
 
-import { decode as atob, encode as btoa } from "base-64";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+// import { unescape } from "lodash";
 import { ChevronLeft } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
@@ -38,6 +38,7 @@ export default function EditAccount() {
   const [imageUri, setImageUri] = useState<string>(
     currentProfileData?.avatar_url ?? ""
   );
+  const [avatar, setAvatar] = useState<string>("");
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -122,13 +123,13 @@ export default function EditAccount() {
   // };
 
   const uploadSvg = async () => {
-    const svgString = imageUri; // "<svg ...>...</svg>"
     const filePath = `avatars/${name}-Profile.svg`;
 
     // Encode the SVG string to base64
-    const base64 = btoa(unescape(encodeURIComponent(svgString)));
+    const base64 = btoa(unescape(encodeURIComponent(avatar)));
 
     // Convert base64 → binary → Uint8Array
+    // console.log(avatar);
     const binary = atob(base64);
     const len = binary.length;
     const bytes = new Uint8Array(len);
@@ -136,14 +137,13 @@ export default function EditAccount() {
       bytes[i] = binary.charCodeAt(i);
     }
 
-    console.log(bytes.byteLength);
+    await supabase.storage.from("ZiltStorage").remove([filePath]);
 
     const { data, error } = await supabase.storage
       .from("ZiltStorage")
       .upload(filePath, bytes, {
         contentType: "image/svg+xml",
-        cacheControl: "3600",
-        upsert: true,
+        // cacheControl: "3600",
       });
 
     if (error) {
@@ -170,12 +170,14 @@ export default function EditAccount() {
 
       const avatar_url = await uploadSvg();
 
+      console.log(avatar_url);
+
       setLoading(true);
       onboardingMutation.mutate(
         {
           bio,
           name: name || profile?.name || "",
-          avatar_url: avatar_url || profile?.avatar_url,
+          avatar_url: avatar_url?.trim() || profile?.avatar_url?.trim(),
           location: {
             lat: location?.coords?.latitude || profile?.location?.lat,
             long: location?.coords?.longitude || profile?.location?.long,
@@ -254,8 +256,8 @@ export default function EditAccount() {
           Edit Profile
         </Text>
         <AvatarPicker
-          onImageLoaded={(url) => {
-            setImageUri(url);
+          onSelect={(avatar) => {
+            setAvatar(avatar);
           }}
           imageURI={profile?.avatar_url ?? ""}
         />

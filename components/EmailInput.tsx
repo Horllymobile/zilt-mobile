@@ -5,9 +5,19 @@ type EmailInputProps = {
   email: string;
   setEmail: (email: string) => void;
   width: number;
+  onBlur?: () => void;
+  label: string;
+  placeholder?: string;
 };
 
-export function EmailInput({ email, setEmail, width }: EmailInputProps) {
+export function EmailInput({
+  email,
+  setEmail,
+  width,
+  onBlur,
+  label,
+  placeholder,
+}: EmailInputProps) {
   return (
     <View>
       <Text
@@ -15,15 +25,17 @@ export function EmailInput({ email, setEmail, width }: EmailInputProps) {
           color: THEME.colors.text,
         }}
       >
-        Email
+        {label}
       </Text>
       <View
         style={{
           borderWidth: 0.2,
           borderRadius: 10,
           marginTop: 10,
-          padding: 10,
-          height: 40,
+          paddingTop: 5,
+          paddingBottom: 5,
+          paddingHorizontal: 10,
+          height: 50,
           width: width - 40,
           borderColor: THEME.colors.text,
         }}
@@ -32,11 +44,13 @@ export function EmailInput({ email, setEmail, width }: EmailInputProps) {
           keyboardType="email-address"
           value={email}
           onChangeText={(e) => setEmail(e)}
-          placeholder="Enter your email address"
-          placeholderTextColor={THEME.colors.textPlaceholder}
+          placeholder={placeholder}
+          onBlur={onBlur}
+          placeholderTextColor={THEME.colors.text}
           style={{
             fontSize: 16,
             width: width - 40,
+            height: 40,
             borderWidth: 0,
             borderRadius: 0,
             color: THEME.colors.text,

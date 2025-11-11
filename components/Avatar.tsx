@@ -1,3 +1,4 @@
+import { PLACEHOLDER_CONSTANTS } from "@/shared/constants/placeholders";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleProp, View, ViewStyle } from "react-native";
 import { SvgXml } from "react-native-svg";
@@ -22,9 +23,11 @@ export function Avatar({ avatar_url, style, width, height }: AvatarProps) {
         try {
           const response = await fetch(avatar_url);
           const text = await response.text();
+          // console.log(text);
           setSvgXml(text);
         } catch (e) {
-          console.error("Failed to load SVG:", e);
+          setSvgXml(PLACEHOLDER_CONSTANTS.avatar);
+          // console.error("Failed to load SVG:", e);
         }
       }
     };
@@ -47,7 +50,13 @@ export function Avatar({ avatar_url, style, width, height }: AvatarProps) {
 
   return (
     <View style={style}>
-      {svgXml && <SvgXml xml={svgXml || ""} width={width} height={height} />}
+      {svgXml && (
+        <SvgXml
+          xml={svgXml || PLACEHOLDER_CONSTANTS.avatar}
+          width={width}
+          height={height}
+        />
+      )}
     </View>
   );
 }

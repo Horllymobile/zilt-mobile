@@ -1,5 +1,12 @@
 import { axiosBaseQuery } from "@/libs/api/request";
 import { useAuthStore } from "@/libs/store/authStore";
+import { formatErrorMessage } from "@/libs/utils/lib";
+import {
+  ForgotPasswordDto,
+  LoginDto,
+  RegisterDto,
+  ResetPasswordDto,
+} from "@/models/auth";
 import { ILoginReponse, OnboardingDto, Profile } from "@/models/profile";
 import { IApiResponse } from "@/models/response";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -13,7 +20,7 @@ export const useLoginMutation = () => {
   const { setAuthData, session } = useAuthStore();
 
   return useMutation({
-    mutationFn: (data: { email: string; password: string }) =>
+    mutationFn: (data: LoginDto) =>
       axiosBaseQuery({ ...authEndpoints.login, data }),
     onSuccess: (resp: IApiResponse<ILoginReponse>) => {
       queryClient.setQueryData(["user"], resp.data.profile);
@@ -30,7 +37,7 @@ export const useLoginMutation = () => {
       // saveRefreshToken(resp.data?.session.refresh);
 
       if (resp.data.profile.onboarded) {
-        router.replace("/main/(dashboard)/");
+        router.replace("/main/(dashboard)");
       } else {
         router.replace("/onboarding");
       }
@@ -44,18 +51,19 @@ export const useLoginMutation = () => {
 
 export const useForgotPasswordMutation = () => {
   return useMutation({
-    mutationFn: (data: { email: string }) =>
-      axiosBaseQuery({ ...authEndpoints.login, data }),
-    onSuccess: (resp: IApiResponse<ILoginReponse>) => {
+    mutationFn: (data: ForgotPasswordDto) =>
+      axiosBaseQuery({ ...authEndpoints.forgotPassword, data }),
+    onSuccess: (resp: IApiResponse<void>) => {
       // if (resp.data.profile.onboarded) {
       //   router.replace("/main/(dashboard)/");
       // } else {
       //   router.replace("/onboarding");
       // }
+      return resp;
     },
     onError: (error: any) => {
       // console.log(error);
-      // Alert.alert(formatErrorMessage(error));
+      Alert.alert(formatErrorMessage(error));
     },
   });
 };
@@ -64,9 +72,24 @@ export const useRegisterMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { email: string; password: string }) =>
+    mutationFn: (data: RegisterDto) =>
       axiosBaseQuery({ ...authEndpoints.register, data }),
     onSuccess: (resp: IApiResponse<ILoginReponse>) => {
+      // queryClient.setQueryData(["user"], resp.data.profile);
+      Alert.alert(resp.message);
+    },
+    onError: (error: any) => {
+      // console.log(error);
+      // Alert.alert(formatErrorMessage(error));
+    },
+  });
+};
+
+export const useResetPasswordMutation = () => {
+  return useMutation({
+    mutationFn: (data: ResetPasswordDto) =>
+      axiosBaseQuery({ ...authEndpoints.resetPassword, data }),
+    onSuccess: (resp: IApiResponse<void>) => {
       // queryClient.setQueryData(["user"], resp.data.profile);
       Alert.alert(resp.message);
     },

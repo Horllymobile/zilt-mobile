@@ -1,15 +1,19 @@
 "use client";
 import ChatItem from "@/components/ChatItem";
+import ChatSkeletonList from "@/components/ChatSkeletonList";
+import EmptyState from "@/components/EmptyState";
 import { useAuthStore } from "@/libs/store/authStore";
 import { Chat } from "@/models/chat";
 import { THEME } from "@/shared/constants/theme";
 import { useSocket } from "@/shared/hooks/use-socket";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useRouter } from "expo-router";
 import { MessageCirclePlus, Search } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
   Dimensions,
   FlatList,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -18,7 +22,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Chats() {
+  const tabBarHeight = useBottomTabBarHeight();
   const socket = useSocket();
+  const [isLoading, setIsLoading] = useState(true);
   const { width, height } = Dimensions.get("window");
 
   const [chats, setChats] = useState<Chat[]>([]);
@@ -35,7 +41,10 @@ export default function Chats() {
 
     socket.emit("get_chats", { page: 1, size: 10 });
 
-    const handleChats = (res: any) => setChats(res.data);
+    const handleChats = (res: any) => {
+      setChats(res.data);
+      setIsLoading(false);
+    };
 
     socket.on("chats", handleChats);
 
@@ -44,29 +53,31 @@ export default function Chats() {
     };
   }, [socket]);
 
-  // if (!chats) return <ActivityIndicator size={"large"} />;
+  // if (!chats) return ;
 
   return (
     <SafeAreaView
+      edges={["top"]}
       style={{
         flex: 1,
         justifyContent: "center",
         backgroundColor: THEME.colors.background,
       }}
     >
+      {/* Header */}
       <View
         style={{
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          paddingLeft: 16,
-          paddingRight: 16,
+          paddingHorizontal: 16,
+          paddingVertical: 10,
         }}
       >
         <Text
           style={{
             fontSize: 24,
-            fontWeight: "medium",
+            fontWeight: "600",
             color: THEME.colors.text,
           }}
         >
@@ -78,72 +89,76 @@ export default function Chats() {
         >
           <MessageCirclePlus color={THEME.colors.text} />
         </TouchableOpacity>
-        {/* <TouchableOpacity onPress={refresh}>
-          <Loader />
-        </TouchableOpacity> */}
       </View>
-      <View style={{ alignItems: "center", marginTop: 10, marginBottom: 10 }}>
+
+      {/* Search Bar */}
+      <View style={{ alignItems: "center", marginVertical: 10 }}>
         <View
-          className="relative"
           style={{
+            flexDirection: "row",
+            alignItems: "center",
             borderWidth: 0.5,
             borderRadius: 30,
             backgroundColor: THEME.colors.text,
             borderColor: THEME.colors.background,
-
-            marginTop: 10,
-            padding: 10,
+            paddingHorizontal: 10,
             height: 46,
-            width: width - 20,
-            position: "relative",
-            justifyContent: "center",
-            // alignItems: "center",
+            width: width * 0.9, // 90% of screen width
           }}
         >
-          <Search style={{ position: "absolute", left: 12, top: 12 }} />
+          <Search style={{ marginRight: 8 }} color={THEME.colors.background} />
           <TextInput
             style={{
+              flex: 1,
               fontSize: 16,
-              width: width,
-              borderWidth: 0,
-              borderRadius: 0,
-              height: 46,
-              paddingLeft: 30,
+              color: THEME.colors.background,
             }}
             placeholder="Search messages or users"
+            placeholderTextColor={THEME.colors.background + "99"}
           />
         </View>
       </View>
 
-      {chats?.length > 0 ? (
+      {/* Content */}
+      {isLoading ? (
+        <ScrollView style={{ flex: 1 }}>
+          <ChatSkeletonList items={8} />
+        </ScrollView>
+      ) : chats?.length > 0 ? (
         <FlatList
-          data={chats || []}
+          data={chats}
           keyExtractor={(chat) => chat.id}
           renderItem={({ item }) => <ChatItem chat={item} />}
           contentContainerStyle={{
-            padding: 5,
+            paddingHorizontal: 10,
+            paddingTop: 10,
+            paddingBottom: tabBarHeight + 10, // dynamic, perfect fit
           }}
           ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+          showsVerticalScrollIndicator={false}
+          automaticallyAdjustContentInsets={false} // 👈 disables auto insets on iOS
+          contentInsetAdjustmentBehavior="never"
         />
       ) : (
-        <View
-          style={{
-            height: height - 250,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Text>
-            No Chat, Click{"  "}
+        <EmptyState
+          label="No Chats. Add contact to start one!"
+          trigger={
             <TouchableOpacity
+              style={{
+                backgroundColor: THEME.colors.primary,
+                paddingHorizontal: 20,
+                paddingVertical: 10,
+                borderRadius: 25,
+                flexDirection: "row",
+                alignItems: "center",
+              }}
               onPress={() => router.push("/main/(profile)/add-friend")}
             >
               <MessageCirclePlus />
+              <Text style={{ color: "#fff", marginLeft: 8 }}>New Moment</Text>
             </TouchableOpacity>
-            {"  "}to add friends
-          </Text>
-        </View>
+          }
+        />
       )}
     </SafeAreaView>
   );

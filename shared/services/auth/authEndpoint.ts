@@ -5,9 +5,18 @@ export const authEndpoints = {
     url: `${BASE_URL}/auth/login`,
     method: "post",
   },
+  forgotPassword: {
+    url: `${BASE_URL}/auth/forgot-password`,
+    method: "post",
+  },
   register: {
     url: `${BASE_URL}/auth/register`,
     method: "post",
+  },
+
+  resetPassword: {
+    url: `${BASE_URL}/auth/reset-password`,
+    method: "put",
   },
 
   onboarding: {

@@ -24,7 +24,7 @@ type Settings = {
 export default function Profile() {
   const { width } = Dimensions.get("window");
   const { profile } = useAuthStore();
-  // console.log(profile);
+  console.log(profile);
 
   const settings: Settings[] = [
     {

@@ -15,7 +15,6 @@ export default function MainLayout() {
         if (!data) {
           console.log("No new token — logging out");
           logout();
-          router.dismissAll();
           router.replace("/(auth)/login");
         } else {
           console.log("Token refreshed successfully", data);
@@ -23,7 +22,6 @@ export default function MainLayout() {
       } catch (err) {
         console.error("Error refreshing token", err);
         logout();
-        router.dismissAll();
         router.replace("/(auth)/login");
       }
     };
