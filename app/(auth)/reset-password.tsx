@@ -20,7 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 
 // 🧠 Define schema
-const signUpSchema = z
+const resetPasswordUpSchema = z
   .object({
     password: z.string().min(6, "Password must be at least 6 characters long"),
     confirmPassword: z.string().min(6, "Please confirm your password"),
@@ -30,20 +30,20 @@ const signUpSchema = z
     message: "Passwords do not match",
   });
 
-type SignUpFormData = z.infer<typeof signUpSchema>;
+type ResetPasswordFormData = z.infer<typeof resetPasswordUpSchema>;
 
 export default function ResetPassword() {
   const { width } = Dimensions.get("window");
   const { session } = useAuthStore();
-  const registerMutation = useResetPasswordMutation();
+  const resetPasswordMutation = useResetPasswordMutation();
 
   const {
     control,
     handleSubmit,
     formState: { errors, isValid },
     reset,
-  } = useForm<SignUpFormData>({
-    resolver: zodResolver(signUpSchema as any),
+  } = useForm<ResetPasswordFormData>({
+    resolver: zodResolver(resetPasswordUpSchema as any),
     mode: "onChange",
   });
 
@@ -51,10 +51,9 @@ export default function ResetPassword() {
     return <Redirect href={"/main/(dashboard)"} />;
   }
 
-  const onSubmit = (data: SignUpFormData) => {
-    registerMutation.mutate(
+  const onSubmit = (data: ResetPasswordFormData) => {
+    resetPasswordMutation.mutate(
       {
-        token: "",
         password: data.password,
       },
       { onSuccess: () => reset() }
@@ -156,10 +155,10 @@ export default function ResetPassword() {
               alignItems: "center",
               borderRadius: 20,
             }}
-            isLoading={registerMutation.isPending}
+            isLoading={resetPasswordMutation.isPending}
             label="Reset"
             width={width}
-            disabled={registerMutation.isPending || !isValid}
+            disabled={resetPasswordMutation.isPending || !isValid}
             onPress={handleSubmit(onSubmit)}
           />
 
@@ -167,7 +166,7 @@ export default function ResetPassword() {
           <TouchableHighlight
             style={{ marginTop: 10 }}
             onPress={() => router.navigate("/(auth)/login")}
-            disabled={registerMutation.isPending}
+            disabled={resetPasswordMutation.isPending}
           >
             <Text
               style={{

@@ -31,6 +31,7 @@ export default function Login() {
   const { width } = Dimensions.get("window");
   const { session } = useAuthStore();
   const loginMutation = useLoginMutation();
+  // const loginMagicMutation = useLoginMagicMutation();
 
   // ⚙️ Setup react-hook-form with zodResolver
   const {
@@ -185,23 +186,7 @@ export default function Login() {
                 color: THEME.colors.text,
               }}
             >
-              Don’t have an account? Sign Up
-            </Text>
-          </TouchableHighlight>
-
-          <TouchableHighlight
-            style={{ marginTop: 5 }}
-            disabled={loginMutation.isPending}
-            onPress={() => router.navigate("/(auth)/reset-password")}
-          >
-            <Text
-              style={{
-                fontSize: 14,
-                fontFamily: Platform.select({ android: "itim", ios: "itim" }),
-                color: THEME.colors.text,
-              }}
-            >
-              Reset
+              Don't have an account? Sign Up
             </Text>
           </TouchableHighlight>
         </ScrollView>

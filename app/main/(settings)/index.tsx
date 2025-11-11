@@ -9,7 +9,7 @@ import {
   Languages,
   LogOut,
   MessageCircleQuestionMark,
-  Shield,
+  Settings2,
 } from "lucide-react-native";
 import { Dimensions, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -35,11 +35,17 @@ export default function Settings() {
       route: "./notifications",
     },
     {
-      id: "privacy",
-      name: "Privacy",
-      icon: <Shield size={24} color={THEME.colors.text} />,
-      route: "./privacy",
+      id: "settings",
+      name: "Settings",
+      icon: <Settings2 size={24} color={THEME.colors.text} />,
+      route: "./settings",
     },
+    // {
+    //   id: "privacy",
+    //   name: "Privacy",
+    //   icon: <Shield size={24} color={THEME.colors.text} />,
+    //   route: "./privacy",
+    // },
     {
       id: "language",
       name: "Laguage",

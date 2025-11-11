@@ -17,6 +17,15 @@ export const formatErrorMessage = (
   );
 };
 
+export const parseSupabaseUrl = (url: string) => {
+  let parsedUrl = url;
+  if (url.includes("#")) {
+    parsedUrl = url.replace("#", "?");
+  }
+
+  return parsedUrl;
+};
+
 export function timeAgo(value: string): string {
   const date = new Date(value);
   const now = new Date().getTime();

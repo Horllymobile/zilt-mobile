@@ -1,5 +1,6 @@
+import { useAuthStore } from "@/libs/store/authStore";
 import * as Linking from "expo-linking";
-import { Redirect, router } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { useEffect } from "react";
 
 export default function Index() {
@@ -21,5 +22,20 @@ export default function Index() {
 
     return () => sub.remove();
   }, []);
+
+  const { session } = useAuthStore();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!session) return;
+
+    const timer = setTimeout(() => {
+      if (session) {
+        router.replace("/main/(dashboard)");
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [session]);
   return <Redirect href="/splash" />;
 }

@@ -29,6 +29,7 @@
     "@tanstack/react-query-devtools": "^5.90.2",
     "axios": "^1.13.1",
     "base-64": "^1.0.0",
+    "buffer": "^6.0.3",
     "date-fn": "^0.0.2",
     "date-fns": "^4.1.0",
     "emoji-picker-react": "^4.15.0",

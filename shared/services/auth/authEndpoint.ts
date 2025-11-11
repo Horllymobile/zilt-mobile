@@ -5,6 +5,10 @@ export const authEndpoints = {
     url: `${BASE_URL}/auth/login`,
     method: "post",
   },
+  loginMagic: {
+    url: `${BASE_URL}/auth/login-magic`,
+    method: "post",
+  },
   forgotPassword: {
     url: `${BASE_URL}/auth/forgot-password`,
     method: "post",

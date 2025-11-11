@@ -52,7 +52,7 @@ export default function ForgotPassword() {
     forgotPasswordMutation.mutate(
       {
         email: data.email.toLowerCase(),
-        redirect: "https://ziltchat.app/reset-password",
+        redirect: "ziltchat://reset-password",
       },
       {
         onSuccess: (data) => {

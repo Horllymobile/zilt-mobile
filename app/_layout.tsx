@@ -8,6 +8,7 @@ import { Provider as PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Providers } from "../shared/providers";
 
+global.Buffer = global.Buffer || require("buffer").Buffer;
 const queryClient = new QueryClient();
 export default function RootLayout() {
   return (

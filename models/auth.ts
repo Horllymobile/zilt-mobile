@@ -17,6 +17,11 @@ export interface RegisterDto {
 }
 
 export interface ResetPasswordDto {
-  token: string;
   password: string;
+}
+
+export interface LoginMagicDto {
+  phone?: string;
+  email?: string;
+  redirect: string;
 }

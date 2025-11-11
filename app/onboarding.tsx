@@ -1,6 +1,8 @@
 "use client";
 
 import AvatarPicker from "@/components/AvatarPicker";
+import { PlainTextInput } from "@/components/PlainTextInput";
+import { WideButton } from "@/components/WideButton";
 import { useAuthStore } from "@/libs/store/authStore";
 import { PLACEHOLDER_CONSTANTS } from "@/shared/constants/placeholders";
 import { THEME } from "@/shared/constants/theme";
@@ -15,16 +17,7 @@ import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  Platform,
-  Text,
-  TextInput,
-  TouchableHighlight,
-  View,
-} from "react-native";
+import { Alert, Dimensions, Platform, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Onboarding() {
@@ -131,86 +124,30 @@ export default function Onboarding() {
       <Text style={{ fontSize: 24, marginBottom: 30 }}>Account Setup</Text>
       <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
       <AvatarPicker
-        onImageLoaded={(url) => {
+        onSelect={(url) => {
           setImageUri(url);
         }}
         imageURI={profile?.avatar_url || PLACEHOLDER_CONSTANTS.avatar}
       />
       {/* <ImagePicker onImageLoaded={onImageLoaded} imageURI={imageUri} />
        */}
-      <View>
-        <Text>Username</Text>
-        <View
-          style={{
-            borderWidth: 0.2,
-            borderRadius: 10,
-            marginTop: 10,
-            padding: 10,
-            height: 58,
-            width: width - 40,
-          }}
-        >
-          <TextInput
-            style={{
-              fontSize: 16,
-              width: width - 40,
-              borderWidth: 0,
-              borderRadius: 0,
-            }}
-            placeholder="Enter your username"
-            value={name}
-            onChangeText={(n) => {
-              setName(n);
-              if (n && n !== profile?.name) {
-                recheckName();
-              }
-            }}
-          />
-        </View>
-        <Text
-          style={{
-            marginTop: 5,
-            color: checkNameExist?.success ? "green" : "red",
-          }}
-        >
-          {checkNameExist?.message}
-        </Text>
-      </View>
+      <PlainTextInput
+        label="Username"
+        plainText={name}
+        width={width}
+        placeholder="Enter your username"
+        setPlainText={setName}
+      />
 
-      <View style={{ marginTop: 20 }}>
-        <Text>Bio</Text>
-        <View
-          style={{
-            borderWidth: 0.2,
-            borderRadius: 10,
-            marginTop: 10,
-            padding: 10,
-            height: 70,
-            width: width - 40,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <TextInput
-            style={{
-              fontSize: 16,
-              width: width - 40,
-              height: 70,
-              borderWidth: 0,
-              borderRadius: 0,
-              paddingHorizontal: 10,
-            }}
-            placeholder="Enter your bio"
-            value={bio}
-            multiline={true}
-            maxLength={100}
-            onChangeText={setBio}
-          />
-        </View>
-      </View>
+      <PlainTextInput
+        label="Bio"
+        plainText={bio}
+        width={width}
+        placeholder="Enter your bio"
+        setPlainText={setBio}
+      />
 
-      <TouchableHighlight
+      <WideButton
         style={{
           marginTop: 30,
           backgroundColor: THEME.colors.surface,
@@ -221,27 +158,17 @@ export default function Onboarding() {
           alignItems: "center",
           borderRadius: 20,
         }}
-        disabled={loading || !isValid || isUploading}
+        disabled={
+          onboardingMutation.isPending ||
+          !isValid ||
+          isUploading ||
+          isCheckingName
+        }
         onPress={handleSubmit}
-      >
-        <Text
-          style={{
-            fontSize: 18,
-            fontWeight: "normal",
-            fontFamily: Platform.select({
-              android: "itim",
-              ios: "itim",
-            }),
-            color: THEME.colors.text,
-          }}
-        >
-          {loading ? (
-            <ActivityIndicator size={"small"} color={THEME.colors.text} />
-          ) : (
-            "Submit"
-          )}
-        </Text>
-      </TouchableHighlight>
+        label="Submit"
+        width={width}
+        isLoading={onboardingMutation.isPending || isUploading}
+      />
     </SafeAreaView>
   );
 }

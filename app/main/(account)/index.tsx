@@ -1,6 +1,7 @@
 "use client";
 
 import AvatarPicker from "@/components/AvatarPicker";
+import { PlainTextInput } from "@/components/PlainTextInput";
 import { WideButton } from "@/components/WideButton";
 import { useAuthStore } from "@/libs/store/authStore";
 import { supabase } from "@/libs/superbase";
@@ -25,7 +26,6 @@ import {
   Dimensions,
   Platform,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -248,6 +248,7 @@ export default function EditAccount() {
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
+          gap: 20,
         }}
       >
         <Text
@@ -263,81 +264,21 @@ export default function EditAccount() {
         />
         {/* <ImagePicker onImageLoaded={onImageLoaded} imageURI={imageUri} /> */}
 
-        <View>
-          <Text style={{ color: THEME.colors.text }}>Username</Text>
-          <View
-            style={{
-              borderWidth: 0.2,
-              borderRadius: 10,
-              marginTop: 10,
-              padding: 10,
-              height: 45,
-              borderColor: THEME.colors.text,
-              width: width - 40,
-            }}
-          >
-            <TextInput
-              style={{
-                fontSize: 16,
-                width: width - 40,
-                borderWidth: 0,
-                borderRadius: 0,
-                color: THEME.colors.text,
-              }}
-              placeholder="Enter your username"
-              placeholderTextColor={THEME.colors.text}
-              value={name}
-              onChangeText={(n) => {
-                setName(n);
-                if (n && n !== profile?.name) {
-                  recheckName();
-                }
-              }}
-            />
-          </View>
-          <Text
-            style={{
-              marginTop: 5,
-              color: checkNameExist?.success ? "green" : "red",
-            }}
-          >
-            {checkNameExist?.message}
-          </Text>
-        </View>
+        <PlainTextInput
+          label="Username"
+          plainText={name}
+          width={width}
+          placeholder="Enter your username"
+          setPlainText={setName}
+        />
 
-        <View style={{ marginTop: 10 }}>
-          <Text style={{ color: THEME.colors.text }}>Bio</Text>
-          <View
-            style={{
-              borderWidth: 0.2,
-              borderRadius: 10,
-              marginTop: 10,
-              padding: 10,
-              height: 60,
-              borderColor: THEME.colors.text,
-              width: width - 40,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <TextInput
-              style={{
-                fontSize: 14,
-                width: width - 40,
-                borderWidth: 0,
-                borderRadius: 0,
-                paddingHorizontal: 10,
-                color: THEME.colors.text,
-              }}
-              placeholder="Enter your bio"
-              placeholderTextColor={THEME.colors.text}
-              value={bio}
-              maxLength={100}
-              onChangeText={setBio}
-            />
-          </View>
-        </View>
+        <PlainTextInput
+          label="Bio"
+          plainText={bio}
+          width={width}
+          placeholder="Enter your bio"
+          setPlainText={setBio}
+        />
 
         <WideButton
           style={{

@@ -11,14 +11,7 @@ export default function Splash() {
 
   useEffect(() => {
     if (!session) return;
-
-    const timer = setTimeout(() => {
-      if (session) {
-        router.replace("/main/(dashboard)");
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
+    router.replace("/main/(dashboard)");
   }, [session]);
   return (
     <SafeAreaView

@@ -4,6 +4,7 @@ import { formatErrorMessage } from "@/libs/utils/lib";
 import {
   ForgotPasswordDto,
   LoginDto,
+  LoginMagicDto,
   RegisterDto,
   ResetPasswordDto,
 } from "@/models/auth";
@@ -45,6 +46,17 @@ export const useLoginMutation = () => {
     onError: (error: any) => {
       // console.log(error);
       // Alert.alert(formatErrorMessage(error));
+    },
+  });
+};
+
+export const useLoginMagicMutation = () => {
+  return useMutation({
+    mutationFn: (data: LoginMagicDto) =>
+      axiosBaseQuery({ ...authEndpoints.loginMagic, data }),
+    onError: (error: any) => {
+      console.log(error);
+      Alert.alert(formatErrorMessage(error));
     },
   });
 };
