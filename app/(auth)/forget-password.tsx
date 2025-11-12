@@ -83,7 +83,7 @@ export default function ForgotPassword() {
         >
           <Image
             source={require("../../assets/images/icon.png")}
-            style={{ width: 250, height: 250 }}
+            style={{ width: 150, height: 150 }}
             resizeMode="contain"
           />
 

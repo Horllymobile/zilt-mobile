@@ -74,7 +74,7 @@ export default function Login() {
         >
           <Image
             source={require("../../assets/images/icon.png")}
-            style={{ width: 250, height: 250, marginBottom: 10 }}
+            style={{ width: 150, height: 150, marginBottom: 10 }}
             resizeMode="contain"
           />
 

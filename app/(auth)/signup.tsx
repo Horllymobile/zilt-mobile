@@ -83,7 +83,7 @@ export default function SignUp() {
         >
           <Image
             source={require("../../assets/images/icon.png")}
-            style={{ width: 250, height: 250, marginBottom: 20 }}
+            style={{ width: 150, height: 150, marginBottom: 20 }}
             resizeMode="contain"
           />
 
