@@ -5,7 +5,7 @@ import { ChevronLeft } from "lucide-react-native";
 import { Dimensions, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function Privacy() {
+export default function Security() {
   const { width } = Dimensions.get("window");
 
   return (
@@ -39,7 +39,7 @@ export default function Privacy() {
               color: THEME.colors.text,
             }}
           >
-            Privacy Settings
+            Security Settings
           </Text>
         </View>
       </View>

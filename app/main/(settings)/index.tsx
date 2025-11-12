@@ -6,9 +6,7 @@ import {
   Bell,
   ChevronLeft,
   Info,
-  Languages,
   LogOut,
-  MessageCircleQuestionMark,
   Settings2,
 } from "lucide-react-native";
 import { Dimensions, Text, TouchableOpacity, View } from "react-native";
@@ -29,35 +27,36 @@ export default function Settings() {
 
   const settings: Settings[] = [
     {
+      id: "settings",
+      name: "Account Settings",
+      icon: <Settings2 size={24} color={THEME.colors.text} />,
+      route: "./settings",
+    },
+    {
       id: "notifications",
       name: "Notifications",
       icon: <Bell size={24} color={THEME.colors.text} />,
       route: "./notifications",
     },
-    {
-      id: "settings",
-      name: "Settings",
-      icon: <Settings2 size={24} color={THEME.colors.text} />,
-      route: "./settings",
-    },
+
     // {
     //   id: "privacy",
     //   name: "Privacy",
     //   icon: <Shield size={24} color={THEME.colors.text} />,
     //   route: "./privacy",
     // },
-    {
-      id: "language",
-      name: "Laguage",
-      icon: <Languages size={24} color={THEME.colors.text} />,
-      route: "./language",
-    },
-    {
-      id: "help",
-      name: "Help",
-      icon: <MessageCircleQuestionMark size={24} color={THEME.colors.text} />,
-      route: "./help",
-    },
+    // {
+    //   id: "language",
+    //   name: "Laguage",
+    //   icon: <Languages size={24} color={THEME.colors.text} />,
+    //   route: "./language",
+    // },
+    // {
+    //   id: "help",
+    //   name: "Help",
+    //   icon: <MessageCircleQuestionMark size={24} color={THEME.colors.text} />,
+    //   route: "./help",
+    // },
     {
       id: "about",
       name: "About",

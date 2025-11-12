@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SceneMap, TabBar, TabView } from "react-native-tab-view";
 import Events from "../(discover)/events";
+import Marketplace from "../(discover)/marketplace";
 import Moment from "../(discover)/moment";
 import People from "../(discover)/people";
 
@@ -21,16 +22,17 @@ const initialLayout = {
 };
 export default function Discover() {
   const { width } = Dimensions.get("window");
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(1);
   const [routes] = useState([
     { key: "moment", title: "Zilt Moments" },
-    // { key: "feed", title: "Feed" },
+    { key: "marketplace", title: "Marketplace" },
     { key: "people", title: "People" },
     { key: "events", title: "Events" },
   ]);
 
   const renderScene = SceneMap({
     people: People,
+    marketplace: Marketplace,
     moment: Moment,
     events: Events,
   });
