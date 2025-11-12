@@ -1,10 +1,12 @@
 import { WideButton } from "@/components/WideButton";
 import { useAuthStore } from "@/libs/store/authStore";
 import { THEME } from "@/shared/constants/theme";
-import { useGetProfileQuery } from "@/shared/services/auth/authApi";
-import * as Linking from "expo-linking";
-import { router, useLocalSearchParams } from "expo-router";
-import { useEffect } from "react";
+import {
+  useGetProfileQuery,
+  useVerifyOTPMutation,
+} from "@/shared/services/auth/authApi";
+import { useLocalSearchParams } from "expo-router";
+import { useRef, useState } from "react";
 import {
   Alert,
   Dimensions,
@@ -12,6 +14,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  TextInput,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -20,51 +24,52 @@ export default function Verify() {
   const { setAuthData } = useAuthStore();
   const getProfileQuery = useGetProfileQuery(false);
 
-  const params = useLocalSearchParams();
+  const { email } = useLocalSearchParams();
+  // console.log(params);
 
-  console.log(params);
+  const verifyOTPMutation = useVerifyOTPMutation();
 
-  useEffect(() => {
-    const handleDeepLink = async ({ url }: { url: string }) => {
-      console.log(url);
-      const { queryParams } = Linking.parse(url);
-      const access_token = queryParams?.access_token;
+  // OTP state
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const inputsRef = useRef<Array<TextInput | null>>([]);
 
-      if (!access_token) {
-        Alert.alert("Error", "No access token found.");
-        // setLoading(false);
-        return;
-      }
+  const handleChange = (text: string, index: number) => {
+    if (!/^\d*$/.test(text)) return; // Only allow digits
 
-      // Restore the session in the app
-      //   const { error } = await supabase.auth.setSession({ access_token });
+    const newOtp = [...otp];
+    newOtp[index] = text;
+    setOtp(newOtp);
 
-      //   if (error) {
-      //     Alert.alert("Error", error.message);
-      //   }
+    if (text && index < 5) {
+      inputsRef.current[index + 1]?.focus();
+    }
 
-      //   setLoading(false);
-    };
+    if (!text && index > 0) {
+      inputsRef.current[index - 1]?.focus();
+    }
+  };
 
-    // Listen for deep link events
-    const subscription = Linking.addEventListener("url", handleDeepLink);
+  const handleSubmit = () => {
+    const otpCode = otp.join("");
+    if (otpCode.length < 6) {
+      Alert.alert("Error", "Please enter a valid 6-digit OTP");
+      return;
+    }
 
-    // Check if app was opened via a link
-    (async () => {
-      const initialUrl = await Linking.getInitialURL();
-      console.log(initialUrl);
-      if (initialUrl) handleDeepLink({ url: initialUrl });
-    })();
-
-    return () => subscription.remove();
-  }, []);
+    console.log("Submitted OTP:", otpCode);
+    // Call your API to verify OTP here
+    verifyOTPMutation.mutate({
+      token: otpCode,
+      email: email as string,
+    });
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: THEME.colors.background }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0} // helps adjust view properly
+        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
       >
         <ScrollView
           contentContainerStyle={{
@@ -83,10 +88,58 @@ export default function Verify() {
             resizeMode="contain"
           />
 
-          {/* 🚀 Submit */}
+          {/* OTP Inputs */}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              width: width - 60,
+            }}
+          >
+            {otp.map((digit, index) => (
+              <TextInput
+                key={index}
+                ref={(ref) => (inputsRef.current[index] = ref) as any}
+                value={digit}
+                onChangeText={(text) => {
+                  // Handle paste of full OTP
+                  if (text.length > 1) {
+                    const pasted = text.slice(0, 6).split("");
+                    const newOtp = [...otp];
+                    for (let i = 0; i < 6; i++) {
+                      newOtp[i] = pasted[i] || "";
+                    }
+                    setOtp(newOtp);
+
+                    // Move focus to last filled input
+                    const nextIndex = Math.min(pasted.length - 1, 5);
+                    inputsRef.current[nextIndex]?.focus();
+                    return;
+                  }
+
+                  // Normal single-digit handling
+                  handleChange(text, index);
+                }}
+                keyboardType="number-pad"
+                maxLength={6} // allows paste of all 6 digits
+                style={{
+                  borderWidth: 1,
+                  borderColor: THEME.colors.surface,
+                  width: 45,
+                  height: 55,
+                  borderRadius: 8,
+                  textAlign: "center",
+                  fontSize: 20,
+                  color: THEME.colors.text,
+                }}
+              />
+            ))}
+          </View>
+
+          {/* Submit OTP */}
           <WideButton
             style={{
-              marginTop: 10,
+              marginTop: 20,
               backgroundColor: THEME.colors.surface,
               width: width - 40,
               height: 50,
@@ -94,13 +147,11 @@ export default function Verify() {
               alignItems: "center",
               borderRadius: 20,
             }}
-            label="Login"
             width={width}
-            disabled={true}
-            onPress={() => {
-              router.navigate("/(auth)/login");
-            }}
-            isLoading={false}
+            label="Verify OTP"
+            disabled={otp.some((d) => d === "")}
+            onPress={handleSubmit}
+            isLoading={verifyOTPMutation.isPending}
           />
         </ScrollView>
       </KeyboardAvoidingView>

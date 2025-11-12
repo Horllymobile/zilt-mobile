@@ -4,10 +4,12 @@ import { Text, TextInput, View } from "react-native";
 type EmailInputProps = {
   plainText: string;
   setPlainText: (plainText: string) => void;
-  width: number;
+  width?: number;
   onBlur?: () => void;
-  label: string;
+  label?: string;
   placeholder?: string;
+  error?: string;
+  maxLength?: number;
 };
 
 export function PlainTextInput({
@@ -17,6 +19,8 @@ export function PlainTextInput({
   onBlur,
   label,
   placeholder,
+  error,
+  maxLength,
 }: EmailInputProps) {
   return (
     <View>
@@ -36,26 +40,35 @@ export function PlainTextInput({
           paddingBottom: 5,
           paddingHorizontal: 10,
           height: 50,
-          width: width - 40,
+          width: width ? width - 40 : "100%",
           borderColor: THEME.colors.text,
         }}
       >
         <TextInput
           keyboardType="default"
           value={plainText}
-          onChangeText={(e) => setPlainText(e)}
+          onChangeText={setPlainText}
           placeholder={placeholder}
           onBlur={onBlur}
           placeholderTextColor={THEME.colors.text}
+          multiline={true} // <-- allow multiple lines
+          textAlignVertical="top" // <-- makes text start from top instead of center
           style={{
             fontSize: 16,
-            width: width - 40,
-            height: 40,
+            width: width ? width - 40 : "100%",
+            minHeight: 80, // <-- allows height to grow
             borderWidth: 0,
             borderRadius: 0,
             color: THEME.colors.text,
+            padding: 10, // optional padding for better look
           }}
+          maxLength={maxLength}
         />
+        {error ? (
+          <Text style={{ color: THEME.colors.error, marginTop: 10 }}>
+            {error}
+          </Text>
+        ) : null}
       </View>
     </View>
   );

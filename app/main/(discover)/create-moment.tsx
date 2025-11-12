@@ -34,7 +34,13 @@ export default function CreateMoment() {
 
     if (!result.canceled) {
       // onImageLoaded(result.assets[0].uri);
-      // router.dismiss();
+      router.dismiss();
+      router.navigate({
+        pathname: "./crop-moment",
+        params: {
+          imageUri: result.assets[0].uri,
+        },
+      });
     }
   };
 
@@ -110,7 +116,6 @@ export default function CreateMoment() {
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => {
-              // setType("media");
               pickImage();
             }}
             style={[

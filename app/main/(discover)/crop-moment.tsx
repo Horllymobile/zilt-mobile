@@ -127,13 +127,13 @@ export default function CropMoment() {
               height += dy;
               break;
             case "tb": // top-bottom vertical drag (bottom edge)
-              height += dy;
+              height -= dy;
               width = height * ASPECT_RATIO;
               break;
             case "bt": // bottom-top vertical drag (top edge)
-              height -= dy;
+              height += dy;
               width = height * ASPECT_RATIO;
-              y += dy; // move up while shrinking
+              y -= dy; // move up while shrinking
               break;
             default:
               break;

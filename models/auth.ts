@@ -16,12 +16,17 @@ export interface RegisterDto {
   password: string;
 }
 
+export interface VerifyOtpDto {
+  email: string;
+  token: string;
+}
+
 export interface ResetPasswordDto {
   password: string;
 }
 
-export interface LoginMagicDto {
-  phone?: string;
+export interface LoginOtpDto {
+  // phone?: string;
   email?: string;
-  redirect: string;
+  // redirect: string;
 }

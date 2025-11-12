@@ -104,9 +104,7 @@ export default function MomentPage() {
                   onPress={() => router.push("/main/(discover)/create-moment")}
                 >
                   <Zap />
-                  <Text style={{ color: "#fff", marginLeft: 8 }}>
-                    New Moment
-                  </Text>
+                  <Text style={{ color: "#fff", marginLeft: 8 }}>Create</Text>
                 </TouchableOpacity>
               }
             />

@@ -24,7 +24,7 @@ type Settings = {
 export default function Profile() {
   const { width } = Dimensions.get("window");
   const { profile } = useAuthStore();
-  console.log(profile);
+  // console.log(profile);
 
   const settings: Settings[] = [
     {
@@ -39,6 +39,12 @@ export default function Profile() {
       icon: <Settings color={THEME.colors.text} size={24} />,
       route: "../(settings)",
     },
+    // {
+    //   id: "8",
+    //   name: "Zilt Wallet",
+    //   icon: <CoinsIcon color={THEME.colors.text} size={24} />,
+    //   route: "../(coins)",
+    // },
     // {
     //   id: "4",
     //   name: "Help",

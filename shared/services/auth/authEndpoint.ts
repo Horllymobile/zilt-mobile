@@ -5,8 +5,12 @@ export const authEndpoints = {
     url: `${BASE_URL}/auth/login`,
     method: "post",
   },
-  loginMagic: {
-    url: `${BASE_URL}/auth/login-magic`,
+  loginOtp: {
+    url: `${BASE_URL}/auth/login-otp`,
+    method: "post",
+  },
+  verifyOtp: {
+    url: `${BASE_URL}/auth/verify-otp`,
     method: "post",
   },
   forgotPassword: {
@@ -15,6 +19,11 @@ export const authEndpoints = {
   },
   register: {
     url: `${BASE_URL}/auth/register`,
+    method: "post",
+  },
+
+  registerOtp: {
+    url: `${BASE_URL}/auth/register-otp`,
     method: "post",
   },
 

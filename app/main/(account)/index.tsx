@@ -4,7 +4,7 @@ import AvatarPicker from "@/components/AvatarPicker";
 import { PlainTextInput } from "@/components/PlainTextInput";
 import { WideButton } from "@/components/WideButton";
 import { useAuthStore } from "@/libs/store/authStore";
-import { supabase } from "@/libs/superbase";
+import { uploadProfileSvg } from "@/libs/utils/lib";
 import { Profile } from "@/models/profile";
 import { IApiResponse } from "@/models/response";
 import { THEME } from "@/shared/constants/theme";
@@ -14,169 +14,117 @@ import {
   useGetProfileQuery,
   useOnboardingMutation,
 } from "@/shared/services/auth/authApi";
-
+import { zodResolver } from "@hookform/resolvers/zod";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-// import { unescape } from "lodash";
 import { ChevronLeft } from "lucide-react-native";
 import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import {
   Alert,
   Dimensions,
+  KeyboardAvoidingView,
   Platform,
+  ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { z } from "zod";
+
+const editProfileSchema = z.object({
+  name: z
+    .string()
+    .min(3, "Username must be at least 3 characters")
+    .max(20, "Username must be at most 20 characters")
+    .regex(
+      /^[a-z0-9_]+$/,
+      "Only lowercase letters, numbers, and underscores are allowed"
+    ),
+  bio: z.string().max(100, "Bio cannot exceed 100 characters").optional(),
+});
+
+type EditProfileForm = z.infer<typeof editProfileSchema>;
 
 export default function EditAccount() {
   const { data: profile, refetch: refetchProfile } = useGetProfileQuery(true);
+  console.log(profile);
   const { setAuthData, session, profile: currentProfileData } = useAuthStore();
   const { width } = Dimensions.get("window");
+  const router = useRouter();
+
+  const [avatar, setAvatar] = useState<string>("");
   const [imageUri, setImageUri] = useState<string>(
     currentProfileData?.avatar_url ?? ""
   );
-  const [avatar, setAvatar] = useState<string>("");
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-
-  const [name, setName] = useState(currentProfileData?.name ?? "");
-  const [bio, setBio] = useState(currentProfileData?.bio ?? "");
-
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null
   );
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const isValid = name !== "" && imageUri !== "";
+  const {
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isValid },
+  } = useForm<EditProfileForm>({
+    resolver: zodResolver(editProfileSchema),
+    defaultValues: {
+      name: currentProfileData?.name?.toLowerCase() || "",
+      bio: currentProfileData?.bio || "",
+    },
+    mode: "onChange",
+  });
+
+  const name = watch("name");
+  const bio = watch("bio");
+
+  const debounceName = useDebounce(name, 500);
+  const { data: checkNameExist, isFetching: isCheckingName } =
+    useCheckNameQuery(false, debounceName);
+
+  const onboardingMutation = useOnboardingMutation();
+
+  useEffect(() => {
+    if (profile) {
+      setAuthData({ session, profile });
+      setImageUri(profile.avatar_url || "");
+      setValue("name", profile.name);
+      setValue("bio", profile.bio);
+    }
+  }, [profile]);
 
   useEffect(() => {
     (async () => {
-      // Ask for permission
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        // setErrorMsg("Permission to access location was denied");
         Alert.alert("Permission to access location was denied");
         return;
       }
 
-      // Get current location
       const loc = await Location.getCurrentPositionAsync({});
       setLocation(loc);
     })();
   }, []);
 
-  useEffect(() => {
-    // console.log(profile);
-    if (profile) {
-      setAuthData({
-        session,
-        profile: profile,
-      });
-
-      console.log(profile.avatar_url);
-      setImageUri(profile.avatar_url || profile.avatar || "");
-      setName(profile?.name);
-      setBio(profile?.bio);
-    }
-  }, [profile]);
-
-  const onboardingMutation = useOnboardingMutation();
-  const debounceName = useDebounce(name, 500);
-  const {
-    data: checkNameExist,
-    isFetching: isCheckingName,
-    refetch: recheckName,
-  } = useCheckNameQuery(false, debounceName);
-
-  // const onImageLoaded = async () => {
-  //   // ✅ Use new File API
-  //   const file = new File(imageUri);
-  //   const buff = await file.arrayBuffer();
-  //   const uint8Array = new Uint8Array(buff);
-  //   const filePath = `avatars/${name}-${Date.now()}.jpg`;
-
-  //   setIsUploading(true);
-  // const { data, error } = await supabase.storage
-  //   .from("ZiltStorage")
-  //   .upload(filePath, uint8Array, {
-  //     contentType: file.type,
-  //     cacheControl: "3600",
-  //     upsert: true,
-  //   });
-
-  // if (error) {
-  //   // console.error("Upload error:", error);
-  //   Alert.alert("Upload failed", error.message);
-  //   return;
-  // }
-
-  // const { data: publicUrl } = supabase.storage
-  //   .from("ZiltStorage")
-  //   .getPublicUrl(filePath);
-
-  // setImageUri(publicUrl.publicUrl);
-  //   setIsUploading(false);
-  // };
-
-  const uploadSvg = async () => {
-    const filePath = `avatars/${name}-Profile.svg`;
-
-    // Encode the SVG string to base64
-    const base64 = btoa(unescape(encodeURIComponent(avatar)));
-
-    // Convert base64 → binary → Uint8Array
-    // console.log(avatar);
-    const binary = atob(base64);
-    const len = binary.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-
-    await supabase.storage.from("ZiltStorage").remove([filePath]);
-
-    const { data, error } = await supabase.storage
-      .from("ZiltStorage")
-      .upload(filePath, bytes, {
-        contentType: "image/svg+xml",
-        // cacheControl: "3600",
-      });
-
-    if (error) {
-      console.error("Upload error:", error);
-      Alert.alert("Upload failed", error.message);
-      return;
-    }
-
-    const { data: publicUrl } = supabase.storage
-      .from("ZiltStorage")
-      .getPublicUrl(filePath);
-
-    console.log(publicUrl);
-
-    return publicUrl.publicUrl;
-  };
-
-  const handleSubmit = async () => {
+  const onSubmit = async (data: EditProfileForm) => {
+    // console.log(data);
     try {
-      if (!imageUri) {
+      if (!avatar) {
         Alert.alert("Please select an image first");
         return;
       }
 
-      const avatar_url = await uploadSvg();
-
-      console.log(avatar_url);
-
       setLoading(true);
+      const avatar_url = await uploadProfileSvg(avatar, data.name);
+
       onboardingMutation.mutate(
         {
-          bio,
-          name: name || profile?.name || "",
+          bio: data.bio,
+          name: data.name,
           avatar_url: avatar_url?.trim() || profile?.avatar_url?.trim(),
           location: {
             lat: location?.coords?.latitude || profile?.location?.lat,
@@ -184,125 +132,150 @@ export default function EditAccount() {
           },
         },
         {
-          onSuccess: (data: IApiResponse<Profile>) => {
+          onSuccess: (response: IApiResponse<Profile>) => {
             setAuthData({
               session,
-              profile: data.data,
+              profile: response.data,
             });
             refetchProfile();
             setLoading(false);
 
-            if (router?.canGoBack()) {
-              router.back();
-            }
+            if (router.canGoBack()) router.back();
           },
-          onError: () => {
-            setLoading(false);
-          },
+          onError: () => setLoading(false),
         }
       );
-    } catch (err) {
+    } catch (err: any) {
       console.error("Upload error:", err);
       Alert.alert("Error uploading image");
+      setLoading(false);
     }
   };
 
+  const isLoading = loading || isCheckingName;
+  const isReady = avatar || isValid || (checkNameExist?.success as boolean);
+
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-        backgroundColor: THEME.colors.background,
-      }}
-    >
+    <SafeAreaView style={{ flex: 1, backgroundColor: THEME.colors.background }}>
       <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
+
+      {/* Header */}
       <View
         style={{
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          paddingLeft: 16,
-          paddingRight: 16,
+          paddingHorizontal: 16,
         }}
       >
         <View style={{ flexDirection: "row", gap: 5, alignItems: "center" }}>
-          <TouchableOpacity
-            onPress={() => {
-              router.back();
-            }}
-          >
+          <TouchableOpacity onPress={() => router.back()}>
             <ChevronLeft color={THEME.colors.text} size={24} />
           </TouchableOpacity>
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: "medium",
-              color: THEME.colors.text,
-            }}
-          >
-            Back
-          </Text>
+          <Text style={{ fontSize: 18, color: THEME.colors.text }}>Back</Text>
         </View>
       </View>
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          gap: 20,
-        }}
+
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
       >
-        <Text
-          style={{ fontSize: 24, marginBottom: 30, color: THEME.colors.text }}
-        >
-          Edit Profile
-        </Text>
-        <AvatarPicker
-          onSelect={(avatar) => {
-            setAvatar(avatar);
-          }}
-          imageURI={profile?.avatar_url ?? ""}
-        />
-        {/* <ImagePicker onImageLoaded={onImageLoaded} imageURI={imageUri} /> */}
-
-        <PlainTextInput
-          label="Username"
-          plainText={name}
-          width={width}
-          placeholder="Enter your username"
-          setPlainText={setName}
-        />
-
-        <PlainTextInput
-          label="Bio"
-          plainText={bio}
-          width={width}
-          placeholder="Enter your bio"
-          setPlainText={setBio}
-        />
-
-        <WideButton
-          style={{
-            marginTop: 30,
-            backgroundColor: THEME.colors.surface,
-            width: width - 40,
-            height: 58,
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
             justifyContent: "center",
-            display: "flex",
             alignItems: "center",
-            borderRadius: 20,
+            paddingBottom: 40,
+            gap: 20,
           }}
-          disabled={
-            onboardingMutation.isPending ||
-            !isValid ||
-            isUploading ||
-            isCheckingName
-          }
-          onPress={handleSubmit}
-          label="Save Changes"
-          width={width}
-          isLoading={onboardingMutation.isPending || isUploading}
-        />
-      </View>
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Body */}
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 35,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 24,
+                marginBottom: 30,
+                color: THEME.colors.text,
+              }}
+            >
+              Edit Profile
+            </Text>
+
+            <AvatarPicker
+              onSelect={(svg) => setAvatar(svg)}
+              imageURI={profile?.avatar_url ?? ""}
+            />
+
+            {/* Username */}
+            <View>
+              {checkNameExist?.success ? (
+                <Text>{checkNameExist?.message}</Text>
+              ) : null}
+              <Controller
+                control={control}
+                name="name"
+                render={({ field: { onChange, value } }) => (
+                  <PlainTextInput
+                    label="Username"
+                    plainText={value}
+                    width={width}
+                    placeholder="Enter your username"
+                    setPlainText={(text) => onChange(text.toLowerCase())}
+                    error={errors.name?.message}
+                  />
+                )}
+              />
+            </View>
+
+            {/* Bio */}
+            <View style={{ marginTop: 10 }}>
+              <Controller
+                control={control}
+                name="bio"
+                render={({ field: { onChange, value } }) => (
+                  <PlainTextInput
+                    label="Bio"
+                    plainText={value || ""}
+                    width={width}
+                    placeholder="Enter your bio"
+                    setPlainText={onChange}
+                    error={errors.bio?.message}
+                  />
+                )}
+              />
+            </View>
+
+            {/* Save Button */}
+            <WideButton
+              style={{
+                marginTop: 30,
+                backgroundColor: THEME.colors.surface,
+                width: width - 40,
+                height: 58,
+                justifyContent: "center",
+                display: "flex",
+                alignItems: "center",
+                borderRadius: 20,
+              }}
+              disabled={!isReady || isLoading}
+              onPress={handleSubmit(onSubmit)}
+              label="Save Changes"
+              width={width}
+              isLoading={isLoading}
+            />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

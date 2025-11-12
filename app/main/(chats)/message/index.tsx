@@ -2,36 +2,29 @@
 
 import { Avatar } from "@/components/Avatar";
 import ChatMessage from "@/components/ChatMessage";
+import MessageBox from "@/components/MessageBox";
 import { useAuthStore } from "@/libs/store/authStore";
 import { supabase } from "@/libs/superbase";
-import { Chat, Message } from "@/models/chat";
+import { Message } from "@/models/chat";
+import { Profile } from "@/models/profile";
 import { THEME } from "@/shared/constants/theme";
 import { useSocket } from "@/shared/hooks/use-socket";
+import { useGetChatQuery } from "@/shared/services/chats/chatApi";
 // import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { File } from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, usePathname, useRouter } from "expo-router";
-import {
-  ChevronLeft,
-  Image as ImageIcon,
-  Search,
-  Send,
-  Smile,
-  X,
-  Zap,
-} from "lucide-react-native";
+import { ChevronLeft, Search } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Dimensions,
   FlatList,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -52,17 +45,19 @@ export default function ChatMessages() {
   const pathname = usePathname();
   const { profile } = useAuthStore();
 
-  const { chat } = useLocalSearchParams();
+  const { person } = useLocalSearchParams();
 
   const router = useRouter();
 
-  const chatData = JSON.parse(chat as string) as Chat;
+  // const chatData = JSON.parse(chat as string) as Chat;
 
   const [messages, setMessages] = useState<Message[]>([]);
 
-  // const { data: chat } = useGetChatQuery(chatId);
-  const chatId = chatData.id;
-  const member = chatData?.members.find((user) => user.userId !== profile?.id);
+  const { data: chat } = useGetChatQuery(false);
+  const chatId = chat?.id;
+  const member = JSON.parse(person as any) as Profile;
+
+  console.log("MEMBER", member);
 
   // const navigation = useNavigation<ChatScreenNav>();
 
@@ -161,14 +156,22 @@ export default function ChatMessages() {
 
     socket.emit("get_messages", { chatId, page: 1, size: 10 });
     socket.on("messages", (msgs: Message[]) => {
-      console.log(msgs[1].media);
+      // console.log(msgs[1]?.media);
       setMessages(msgs);
 
-      unSeenMsgs(msgs).forEach((msg) => {
-        if (msg && profile?.id !== msg?.senderId) {
-          readMessage(msg.id);
-        }
-      });
+      // console.log(msgs);
+
+      if (msgs?.length) {
+        const unseens = unSeenMsgs(msgs);
+
+        // console.log("unSeenMsgs", unseens);
+
+        unseens.forEach((msg) => {
+          if (msg && profile?.id !== msg?.senderId) {
+            readMessage(msg.id);
+          }
+        });
+      }
     });
 
     // socket.on("chat:joined", ({ roomId, userId }) => {
@@ -212,28 +215,12 @@ export default function ChatMessages() {
     }, 1000) as any;
   };
 
-  const sendImage = async () => {
-    const url = await onImageLoaded(imageURL);
-    if (imageURL.trim()) {
-      if (socket) {
-        socket.emit("send_message", {
-          chatId: chatData?.id ?? "",
-          senderId: profile?.id ?? "",
-          recipientId: member?.id ?? "",
-          content: message,
-          media: [url],
-        });
-      }
-      setImageURL("");
-    }
-  };
-
   const sendMessage = async () => {
     const url = imageURL ? await onImageLoaded(imageURL) : "";
     if (message.trim() || url) {
       if (socket) {
         socket.emit("send_message", {
-          chatId: chatData?.id ?? "",
+          chatId,
           senderId: profile?.id ?? "",
           recipientId: member?.id ?? "",
           content: message.trim(),
@@ -279,7 +266,7 @@ export default function ChatMessages() {
                   router.push({
                     pathname: "/main/(profile)/view-profile",
                     params: {
-                      user: JSON.stringify(member.user),
+                      user: JSON.stringify(member),
                     },
                   })
                 }
@@ -288,7 +275,7 @@ export default function ChatMessages() {
                   <ChevronLeft color={THEME.colors.text} size={24} />
                 </TouchableOpacity>
 
-                {member?.user?.avatar_url && (
+                {member?.avatar_url && (
                   <Avatar
                     style={{
                       width: 50,
@@ -299,7 +286,7 @@ export default function ChatMessages() {
                       alignItems: "center",
                       justifyContent: "center",
                     }}
-                    avatar_url={member?.user?.avatar_url}
+                    avatar_url={member?.avatar_url}
                     width={40}
                     height={40}
                   />
@@ -313,7 +300,7 @@ export default function ChatMessages() {
                       color: THEME.colors.text,
                     }}
                   >
-                    {member?.user.name}
+                    {member.name}
                   </Text>
                   {typingUserIds.length > 0 && (
                     <Text
@@ -332,9 +319,9 @@ export default function ChatMessages() {
               <View
                 style={{ flexDirection: "row", gap: 20, alignItems: "center" }}
               >
-                <TouchableOpacity onPress={handleCapture}>
+                {/* <TouchableOpacity onPress={handleCapture}>
                   <Zap color={THEME.colors.text} size={28} />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
                 <TouchableOpacity>
                   <Search color={THEME.colors.text} size={28} />
                 </TouchableOpacity>
@@ -359,99 +346,15 @@ export default function ChatMessages() {
             </ViewShot>
 
             {/* ✅ Floating input section */}
-            <View
-              style={{
-                paddingHorizontal: 10,
-                paddingVertical: 8,
-                backgroundColor: THEME.colors.surface,
-              }}
-            >
-              {imageURL && (
-                <View
-                  style={{
-                    marginBottom: 8,
-                    borderRadius: 10,
-                    overflow: "hidden",
-                    maxHeight: 200,
-                  }}
-                >
-                  <Image
-                    source={{ uri: imageURL }}
-                    style={{ width: "100%", height: 200, resizeMode: "cover" }}
-                  />
-                  <TouchableOpacity
-                    onPress={() => setImageURL("")}
-                    style={{
-                      position: "absolute",
-                      top: 8,
-                      right: 8,
-                      backgroundColor: "rgba(0,0,0,0.5)",
-                      borderRadius: 16,
-                      padding: 4,
-                    }}
-                  >
-                    <X color={THEME.colors.text} size={16} />
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 10,
-                }}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    borderWidth: 0.5,
-                    borderRadius: 30,
-                    borderColor: THEME.colors.text,
-                    flex: 1,
-                    paddingHorizontal: 12,
-                    paddingVertical: 6,
-                    paddingRight: 20,
-                  }}
-                >
-                  <Smile color={THEME.colors.text} />
-                  <TextInput
-                    style={styles.textInput}
-                    maxLength={2000}
-                    onChangeText={(text) => {
-                      setMessage(text);
-                      handleTyping(text);
-                    }}
-                    multiline
-                    value={message}
-                    placeholder="Message"
-                  />
-                  {message === "" && !imageURL ? (
-                    <TouchableOpacity onPress={pickImage}>
-                      <ImageIcon size={24} color={THEME.colors.text} />
-                    </TouchableOpacity>
-                  ) : null}
-                </View>
-
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: THEME.colors.background,
-                    borderRadius: 50,
-                    padding: 12,
-                    width: 48,
-                    height: 48,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                  disabled={!message.trim() && !imageURL}
-                  onPress={sendMessage}
-                >
-                  <Send color={THEME.colors.text} size={20} />
-                </TouchableOpacity>
-              </View>
-            </View>
+            <MessageBox
+              handleTyping={handleTyping}
+              imageURL={imageURL}
+              message={message}
+              onSend={sendMessage}
+              pickImage={pickImage}
+              setImageURL={setImageURL}
+              setMessage={setMessage}
+            />
           </View>
         </KeyboardAvoidingView>
       ) : (

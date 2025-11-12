@@ -1,4 +1,5 @@
 import { formatDate } from "date-fns";
+import { supabase } from "../superbase";
 
 export const formatErrorMessage = (
   error: any,
@@ -24,6 +25,32 @@ export const parseSupabaseUrl = (url: string) => {
   }
 
   return parsedUrl;
+};
+
+export const uploadProfileSvg = async (image: string, name: string) => {
+  const filePath = `avatars/${name}-profile.svg`;
+
+  const base64 = btoa(unescape(encodeURIComponent(image)));
+  const binary = atob(base64);
+  const len = binary.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+
+  await supabase.storage.from("ZiltStorage").remove([filePath]);
+
+  const { error } = await supabase.storage
+    .from("ZiltStorage")
+    .upload(filePath, bytes, {
+      contentType: "image/svg+xml",
+    });
+
+  if (error) throw new Error(error.message);
+
+  const { data: publicUrl } = supabase.storage
+    .from("ZiltStorage")
+    .getPublicUrl(filePath);
+
+  return publicUrl.publicUrl;
 };
 
 export function timeAgo(value: string): string {

@@ -1,13 +1,8 @@
 import EmptyState from "@/components/EmptyState";
-import PeopleItem from "@/components/PeopleItem";
-import PeopleSkeletonList from "@/components/PeopleSkeletonList";
 import { THEME } from "@/shared/constants/theme";
-import { useFindPeopleQuery } from "@/shared/services/discovers/discoverApi";
 import { useState } from "react";
 import {
   Dimensions,
-  FlatList,
-  ScrollView,
   StyleSheet,
   // TextInput,
   View,
@@ -19,14 +14,14 @@ const initialLayout = {
 };
 
 export default function MarketPlace() {
-  const { data: people, isFetching, refetch } = useFindPeopleQuery(true);
+  // const { data: people, isFetching, refetch } = useFindPeopleQuery(true);
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
   // Filter results locally based on search
-  const filteredPeople = search
-    ? people?.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
-    : people;
+  // const filteredPeople = search
+  //   ? people?.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
+  //   : people;
 
   return (
     <View style={styles.container}>
@@ -41,8 +36,10 @@ export default function MarketPlace() {
         />
       </View> */}
 
+      <EmptyState label="Market place" />
+
       {/* People List */}
-      {isFetching ? (
+      {/* {isFetching ? (
         <ScrollView style={{ flex: 1 }}>
           <PeopleSkeletonList items={8} />
         </ScrollView>
@@ -61,7 +58,7 @@ export default function MarketPlace() {
         // <View style={styles.empty}>
         //   <Text style={{ color: "#555" }}>No people nearby</Text>
         // </View>
-      )}
+      )} */}
     </View>
   );
 }

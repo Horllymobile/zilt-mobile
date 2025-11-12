@@ -10,6 +10,7 @@ type PasswordInputProps = {
   onBlur?: () => void;
   label: string;
   placeholder?: string;
+  error?: string;
 };
 
 export function PasswordInput({
@@ -19,6 +20,7 @@ export function PasswordInput({
   onBlur,
   label,
   placeholder,
+  error,
 }: PasswordInputProps) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -83,6 +85,9 @@ export function PasswordInput({
           )}
         </TouchableOpacity>
       </View>
+      {error ? (
+        <Text style={{ color: THEME.colors.error }}>{error}</Text>
+      ) : null}
     </View>
   );
 }

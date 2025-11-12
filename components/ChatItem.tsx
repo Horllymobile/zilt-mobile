@@ -16,7 +16,12 @@ export default function ChatItem({ chat }: { chat: Chat }) {
 
   const socket = socketService?.getSocket();
   const readMessage = () => {
-    if (chat?.lastMessage && !chat?.lastMessage?.seen && socket) {
+    if (
+      chat?.lastMessage &&
+      !chat?.lastMessage?.seen &&
+      socket &&
+      profile?.id !== member?.id
+    ) {
       socket.emit("read_message", chat.lastMessageId);
     }
   };
@@ -77,7 +82,7 @@ export default function ChatItem({ chat }: { chat: Chat }) {
         router.push({
           pathname: `/main/(chats)/message`,
           params: {
-            chat: JSON.stringify(chat),
+            person: JSON.stringify(member?.user),
           },
         });
       }}

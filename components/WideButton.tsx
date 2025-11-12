@@ -9,10 +9,10 @@ import {
 } from "react-native";
 
 type ButtonProps = {
-  width: number;
-  disabled: boolean;
-  onPress: () => void;
-  isLoading: boolean;
+  width?: number;
+  disabled?: boolean;
+  onPress?: () => void;
+  isLoading?: boolean;
   label: string;
   style?: StyleProp<ViewStyle>;
 };

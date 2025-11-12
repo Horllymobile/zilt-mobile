@@ -1,9 +1,8 @@
 import { EmailInput } from "@/components/EmailInput";
-import { PasswordInput } from "@/components/PasswordInput";
 import { WideButton } from "@/components/WideButton";
 import { useAuthStore } from "@/libs/store/authStore";
 import { THEME } from "@/shared/constants/theme";
-import { useLoginMutation } from "@/shared/services/auth/authApi";
+import { useLoginOTPMutation } from "@/shared/services/auth/authApi";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Redirect, router } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
@@ -14,7 +13,6 @@ import {
   Platform,
   ScrollView,
   Text,
-  TouchableHighlight,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,7 +20,7 @@ import * as z from "zod";
 
 const loginSchema = z.object({
   email: z.string().email("Email is invalid"),
-  password: z.string().min(8, "Password must be at least 8 characters long"),
+  // password: z.string().min(8, "Password must be at least 8 characters long"),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -30,8 +28,8 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function Login() {
   const { width } = Dimensions.get("window");
   const { session } = useAuthStore();
-  const loginMutation = useLoginMutation();
-  // const loginMagicMutation = useLoginMagicMutation();
+  // const loginMutation = useLoginMutation();
+  const loginOTPMutation = useLoginOTPMutation();
 
   // ⚙️ Setup react-hook-form with zodResolver
   const {
@@ -48,10 +46,21 @@ export default function Login() {
   }
 
   const onSubmit = (data: LoginFormData) => {
-    loginMutation.mutate({
-      email: data.email.toLowerCase(),
-      password: data.password,
-    });
+    loginOTPMutation.mutate(
+      {
+        email: data.email.toLowerCase(),
+      },
+      {
+        onSuccess: () => {
+          router.navigate({
+            pathname: "/(auth)/verify",
+            params: {
+              email: data.email,
+            },
+          });
+        },
+      }
+    );
   };
 
   return (
@@ -108,7 +117,7 @@ export default function Login() {
           </View>
 
           {/* 🔒 Password Field */}
-          <View style={{ width: width - 40 }}>
+          {/* <View style={{ width: width - 40 }}>
             <Controller
               control={control}
               name="password"
@@ -134,7 +143,7 @@ export default function Login() {
                 {errors.password.message}
               </Text>
             )}
-          </View>
+          </View> */}
 
           {/* 🚀 Login Button */}
           <WideButton
@@ -149,15 +158,15 @@ export default function Login() {
               alignItems: "center",
               borderRadius: 20,
             }}
-            isLoading={loginMutation.isPending}
-            label="Login"
+            isLoading={loginOTPMutation.isPending}
+            label="Login / Sign Up"
             width={width}
-            disabled={loginMutation.isPending || !isValid}
+            disabled={loginOTPMutation.isPending || !isValid}
             onPress={handleSubmit(onSubmit)}
           />
 
           {/* 🔑 Forgot Password */}
-          <TouchableHighlight
+          {/* <TouchableHighlight
             style={{ marginTop: 5 }}
             onPress={() => router.navigate("/(auth)/forget-password")}
             disabled={loginMutation.isPending}
@@ -171,12 +180,12 @@ export default function Login() {
             >
               Forgot Password?
             </Text>
-          </TouchableHighlight>
+          </TouchableHighlight> */}
 
           {/* 🧾 Signup Link */}
-          <TouchableHighlight
+          {/* <TouchableHighlight
             style={{ marginTop: 5 }}
-            disabled={loginMutation.isPending}
+            disabled={loginOTPMutation.isPending}
             onPress={() => router.navigate("/(auth)/signup")}
           >
             <Text
@@ -188,7 +197,7 @@ export default function Login() {
             >
               Don't have an account? Sign Up
             </Text>
-          </TouchableHighlight>
+          </TouchableHighlight> */}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

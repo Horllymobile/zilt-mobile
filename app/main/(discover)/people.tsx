@@ -23,6 +23,8 @@ export default function People() {
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
+  console.log(people);
+
   // Filter results locally based on search
   const filteredPeople = search
     ? people?.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))

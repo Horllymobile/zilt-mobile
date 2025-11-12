@@ -1,6 +1,6 @@
 import { THEME } from "@/shared/constants/theme";
 import { Tabs } from "expo-router";
-import { MessageCircle, Telescope, User } from "lucide-react-native";
+import { MessageCircle, User } from "lucide-react-native";
 import React from "react";
 
 export default function TabLayout() {
@@ -32,7 +32,7 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="discover"
         options={{
           title: "Discover",
@@ -40,7 +40,7 @@ export default function TabLayout() {
             <Telescope color={color} size={size} />
           ),
         }}
-      />
+      /> */}
       <Tabs.Screen
         name="profile"
         options={{

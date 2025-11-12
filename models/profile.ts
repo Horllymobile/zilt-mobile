@@ -7,10 +7,13 @@ export interface Profile {
   bio: string;
   onboarded: boolean;
   lastSeen: string;
+  qr_url?: string;
   location?: {
     lat?: number;
     long?: number;
   };
+  distance: number; // numeric value (km)
+  distanceReadable: string;
 }
 
 export type Session = {
@@ -28,7 +31,7 @@ export interface ILoginReponse {
 export interface OnboardingDto {
   name: string;
   avatar_url?: string;
-  bio: string;
+  bio?: string;
   location?: {
     lat?: number;
     long?: number;

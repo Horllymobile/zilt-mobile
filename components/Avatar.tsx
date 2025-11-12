@@ -23,11 +23,10 @@ export function Avatar({ avatar_url, style, width, height }: AvatarProps) {
         try {
           const response = await fetch(avatar_url);
           const text = await response.text();
-          // console.log(text);
           setSvgXml(text);
         } catch (e) {
           setSvgXml(PLACEHOLDER_CONSTANTS.avatar);
-          // console.error("Failed to load SVG:", e);
+          console.error("Failed to load SVG:", e);
         }
       }
     };

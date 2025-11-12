@@ -3,6 +3,7 @@ import { Avatar } from "@/components/Avatar";
 import { useAuthStore } from "@/libs/store/authStore";
 import { PLACEHOLDER_CONSTANTS } from "@/shared/constants/placeholders";
 import { THEME } from "@/shared/constants/theme";
+import Clipboard from "@react-native-clipboard/clipboard";
 import { router } from "expo-router";
 import { ChevronLeft, Link } from "lucide-react-native";
 import { Dimensions, Image, Text, TouchableOpacity, View } from "react-native";
@@ -12,6 +13,13 @@ export default function QrScan() {
   const { width } = Dimensions.get("window");
 
   const { profile } = useAuthStore();
+
+  const myziltLink = `ziltchat://main/(profile)/add-friend?username=${profile?.name}`;
+
+  const copyToClipboard = async () => {
+    Clipboard.setString(myziltLink);
+    alert("Copied to clipboard!");
+  };
 
   return (
     <SafeAreaView
@@ -108,28 +116,32 @@ export default function QrScan() {
       </View>
 
       <View style={{ marginTop: 20, paddingHorizontal: 16, gap: 15 }}>
-        <Text
-          className="text-center"
-          style={{
-            fontSize: 24,
-            textAlign: "center",
-            color: THEME.colors.text,
-          }}
-        >
-          Scan the QR code to start chatting
-        </Text>
         {/* QR Code Scanner component would go here */}
-        <Image
-          source={require("@/assets/images/qr_code.png")}
-          style={{
-            height: 300,
-            minHeight: 300,
-            borderRadius: 8,
-            width: width - 32,
-            maxWidth: 400,
-            alignSelf: "center",
-          }}
-        />
+        {profile?.qr_url ? (
+          <>
+            <Text
+              className="text-center"
+              style={{
+                fontSize: 24,
+                textAlign: "center",
+                color: THEME.colors.text,
+              }}
+            >
+              Scan the QR code to start chatting
+            </Text>
+            <Image
+              source={{ uri: profile?.qr_url }}
+              style={{
+                height: 300,
+                minHeight: 300,
+                borderRadius: 8,
+                width: width - 32,
+                maxWidth: 400,
+                alignSelf: "center",
+              }}
+            />
+          </>
+        ) : null}
 
         <TouchableOpacity
           style={{
@@ -140,6 +152,7 @@ export default function QrScan() {
             paddingVertical: 15,
             borderRadius: 15,
           }}
+          onPress={copyToClipboard}
         >
           <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
             <Link color={THEME.colors.text} size={18} />

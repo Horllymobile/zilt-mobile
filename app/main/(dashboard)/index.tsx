@@ -2,20 +2,20 @@
 import ChatItem from "@/components/ChatItem";
 import ChatSkeletonList from "@/components/ChatSkeletonList";
 import EmptyState from "@/components/EmptyState";
+import SearchBar from "@/components/SearchBar";
 import { useAuthStore } from "@/libs/store/authStore";
 import { Chat } from "@/models/chat";
 import { THEME } from "@/shared/constants/theme";
 import { useSocket } from "@/shared/hooks/use-socket";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useRouter } from "expo-router";
-import { MessageCirclePlus, Search } from "lucide-react-native";
+import { MessageCirclePlus } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
   Dimensions,
   FlatList,
   ScrollView,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -29,12 +29,16 @@ export default function Chats() {
 
   const [chats, setChats] = useState<Chat[]>([]);
 
-  const { session } = useAuthStore();
+  const { session, profile } = useAuthStore();
+
   const router = useRouter();
 
-  // if (!session) {
-  //   return <Redirect href={"/(auth)/login"} />;
-  // }
+  useEffect(() => {
+    if (!profile) return; // wait for profile to load
+    if (profile && !profile.onboarded) {
+      router.push("/onboarding");
+    }
+  }, [profile]);
 
   useEffect(() => {
     if (!socket) return;
@@ -57,10 +61,10 @@ export default function Chats() {
 
   return (
     <SafeAreaView
-      edges={["top"]}
+      // edges={["top"]}
       style={{
         flex: 1,
-        justifyContent: "center",
+        // justifyContent: "center",
         backgroundColor: THEME.colors.background,
       }}
     >
@@ -70,8 +74,8 @@ export default function Chats() {
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          paddingHorizontal: 16,
-          paddingVertical: 10,
+          paddingHorizontal: 10,
+          // paddingVertical: 10,
         }}
       >
         <Text
@@ -92,32 +96,11 @@ export default function Chats() {
       </View>
 
       {/* Search Bar */}
-      <View style={{ alignItems: "center", marginVertical: 10 }}>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            borderWidth: 0.5,
-            borderRadius: 30,
-            backgroundColor: THEME.colors.text,
-            borderColor: THEME.colors.background,
-            paddingHorizontal: 10,
-            height: 46,
-            width: width * 0.9, // 90% of screen width
-          }}
-        >
-          <Search style={{ marginRight: 8 }} color={THEME.colors.background} />
-          <TextInput
-            style={{
-              flex: 1,
-              fontSize: 16,
-              color: THEME.colors.background,
-            }}
-            placeholder="Search messages or users"
-            placeholderTextColor={THEME.colors.background + "99"}
-          />
-        </View>
-      </View>
+      <SearchBar
+        width={width}
+        text=""
+        placeholder={"Search messages or users"}
+      />
 
       {/* Content */}
       {isLoading ? (
@@ -148,14 +131,16 @@ export default function Chats() {
                 backgroundColor: THEME.colors.primary,
                 paddingHorizontal: 20,
                 paddingVertical: 10,
-                borderRadius: 25,
+                borderRadius: 50,
+                height: 50,
+                width: 50,
                 flexDirection: "row",
                 alignItems: "center",
+                justifyContent: "center",
               }}
               onPress={() => router.push("/main/(profile)/add-friend")}
             >
-              <MessageCirclePlus />
-              <Text style={{ color: "#fff", marginLeft: 8 }}>New Moment</Text>
+              <MessageCirclePlus color={THEME.colors.text} />
             </TouchableOpacity>
           }
         />

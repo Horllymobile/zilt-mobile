@@ -3,7 +3,10 @@ import { PasswordInput } from "@/components/PasswordInput";
 import { WideButton } from "@/components/WideButton";
 import { useAuthStore } from "@/libs/store/authStore";
 import { THEME } from "@/shared/constants/theme";
-import { useRegisterMutation } from "@/shared/services/auth/authApi";
+import {
+  useRegisterMutation,
+  useRegisterOtpMutation,
+} from "@/shared/services/auth/authApi";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Redirect, router } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
@@ -38,6 +41,7 @@ export default function SignUp() {
   const { width } = Dimensions.get("window");
   const { session } = useAuthStore();
   const registerMutation = useRegisterMutation();
+  const registerOtpMutation = useRegisterOtpMutation();
 
   const {
     control,
@@ -54,10 +58,10 @@ export default function SignUp() {
   }
 
   const onSubmit = (data: SignUpFormData) => {
-    registerMutation.mutate(
+    registerOtpMutation.mutate(
       {
         email: data.email.toLowerCase(),
-        password: data.password,
+        // password: data.password,
       },
       { onSuccess: () => reset() }
     );

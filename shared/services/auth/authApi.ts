@@ -4,9 +4,10 @@ import { formatErrorMessage } from "@/libs/utils/lib";
 import {
   ForgotPasswordDto,
   LoginDto,
-  LoginMagicDto,
+  LoginOtpDto,
   RegisterDto,
   ResetPasswordDto,
+  VerifyOtpDto,
 } from "@/models/auth";
 import { ILoginReponse, OnboardingDto, Profile } from "@/models/profile";
 import { IApiResponse } from "@/models/response";
@@ -50,10 +51,10 @@ export const useLoginMutation = () => {
   });
 };
 
-export const useLoginMagicMutation = () => {
+export const useLoginOTPMutation = () => {
   return useMutation({
-    mutationFn: (data: LoginMagicDto) =>
-      axiosBaseQuery({ ...authEndpoints.loginMagic, data }),
+    mutationFn: (data: LoginOtpDto) =>
+      axiosBaseQuery({ ...authEndpoints.loginOtp, data }),
     onError: (error: any) => {
       console.log(error);
       Alert.alert(formatErrorMessage(error));
@@ -80,6 +81,37 @@ export const useForgotPasswordMutation = () => {
   });
 };
 
+export const useVerifyOTPMutation = () => {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  const { setAuthData, session } = useAuthStore();
+
+  return useMutation({
+    mutationFn: (data: VerifyOtpDto) =>
+      axiosBaseQuery({ ...authEndpoints.verifyOtp, data }),
+    onSuccess: (resp: IApiResponse<ILoginReponse>) => {
+      queryClient.setQueryData(["user"], resp.data.profile);
+
+      setAuthData({
+        session: resp.data.session,
+        profile: resp.data.profile,
+      });
+
+      console.log(resp.data);
+
+      // if (resp?.data?.profile?.onboarded === false) {
+      //   router.replace("/onboarding");
+      // } else {
+      //   router.replace("/main/(dashboard)");
+      // }
+    },
+    onError: (error: any) => {
+      // console.log(error);
+      // Alert.alert(formatErrorMessage(error));
+    },
+  });
+};
+
 export const useRegisterMutation = () => {
   const queryClient = useQueryClient();
 
@@ -87,6 +119,21 @@ export const useRegisterMutation = () => {
     mutationFn: (data: RegisterDto) =>
       axiosBaseQuery({ ...authEndpoints.register, data }),
     onSuccess: (resp: IApiResponse<ILoginReponse>) => {
+      // queryClient.setQueryData(["user"], resp.data.profile);
+      Alert.alert(resp.message);
+    },
+    onError: (error: any) => {
+      // console.log(error);
+      // Alert.alert(formatErrorMessage(error));
+    },
+  });
+};
+
+export const useRegisterOtpMutation = () => {
+  return useMutation({
+    mutationFn: (data: LoginOtpDto) =>
+      axiosBaseQuery({ ...authEndpoints.registerOtp, data }),
+    onSuccess: (resp: IApiResponse<void>) => {
       // queryClient.setQueryData(["user"], resp.data.profile);
       Alert.alert(resp.message);
     },
@@ -162,6 +209,6 @@ export const useCheckNameQuery = (enabled: boolean, name: string) => {
       )) as IApiResponse<any>;
       return resp;
     },
-    enabled,
+    enabled: Boolean(enabled && name),
   });
 };

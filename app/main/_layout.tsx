@@ -1,6 +1,6 @@
 import { refreshAccessToken } from "@/libs/api/refresh";
 import { useAuthStore } from "@/libs/store/authStore";
-import { router, Stack } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 import { useEffect } from "react";
 
 export default function MainLayout() {
@@ -15,14 +15,15 @@ export default function MainLayout() {
         if (!data) {
           console.log("No new token — logging out");
           logout();
-          router.replace("/(auth)/login");
+          // router.push("/(auth)/login");
+          return <Redirect href={"/(auth)/login"} />;
         } else {
           console.log("Token refreshed successfully", data);
         }
       } catch (err) {
         console.error("Error refreshing token", err);
         logout();
-        router.replace("/(auth)/login");
+        return <Redirect href={"/(auth)/login"} />;
       }
     };
 
@@ -45,7 +46,6 @@ export default function MainLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       {/* The nested routes like (dashboard) will render here */}
-      <Stack.Screen name="CropMoment" />
     </Stack>
   );
 }

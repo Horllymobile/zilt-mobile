@@ -1,5 +1,6 @@
 "use client";
 import { Avatar } from "@/components/Avatar";
+import { PlainTextInput } from "@/components/PlainTextInput";
 import { useAuthStore } from "@/libs/store/authStore";
 import { ErrorResponse } from "@/models/response";
 import { PLACEHOLDER_CONSTANTS } from "@/shared/constants/placeholders";
@@ -13,7 +14,6 @@ import {
   ActivityIndicator,
   Dimensions,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -38,26 +38,14 @@ export default function AddFriend() {
 
   //   router.push(`/main/(chats)/`);
 
-  const onCreateChat = () => {
-    if (user && profile) {
-      createChatMutation.mutate(
-        {
-          recipientId: user?.id,
-          senderId: profile.id,
-          content: "",
+  const onChat = () => {
+    if (user) {
+      router.push({
+        pathname: `/main/(chats)/message`,
+        params: {
+          person: JSON.stringify(user),
         },
-        {
-          onSuccess: (data) => {
-            // console.log(data.data);
-            router.push({
-              pathname: `/main/(chats)/message`,
-              params: {
-                chat: data,
-              },
-            });
-          },
-        }
-      );
+      });
     }
   };
 
@@ -96,21 +84,6 @@ export default function AddFriend() {
         </View>
       </View>
 
-      {/* {isError && (
-        <View
-          style={{
-            marginTop: 20,
-            paddingHorizontal: 16,
-            gap: 15,
-            alignItems: "center",
-            borderBottomWidth: 1,
-            borderBottomColor: "#ddd",
-            paddingBottom: 20,
-          }}
-        >
-          <Text>{error.message}</Text>
-        </View>
-      )} */}
       {user && (
         <View
           style={{
@@ -160,7 +133,7 @@ export default function AddFriend() {
               borderRadius: 15,
             }}
             disabled={createChatMutation.isPending}
-            onPress={onCreateChat}
+            onPress={onChat}
           >
             <View
               style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
@@ -197,38 +170,15 @@ export default function AddFriend() {
           Search for friends and start chatting
         </Text>
         {/* QR Code Scanner component would go here */}
-        <View>
-          <View
-            style={{
-              borderWidth: 0.2,
-              borderRadius: 10,
-              marginTop: 10,
-              padding: 10,
-              height: 50,
-              width: width - 40,
-              borderColor: THEME.colors.text,
-            }}
-          >
-            <TextInput
-              style={{
-                fontSize: 16,
-                width: width - 40,
-                borderWidth: 0,
-                borderRadius: 0,
-                color: THEME.colors.text,
-              }}
-              placeholder="Enter your username"
-              placeholderTextColor={THEME.colors.text}
-              value={name}
-              onChangeText={(n) => {
-                setName(n);
-                if (n && n !== profile?.name) {
-                  //   recheckName();
-                }
-              }}
-            />
-          </View>
-        </View>
+        <PlainTextInput
+          label=""
+          placeholder="Enter your username"
+          width={width}
+          plainText={name}
+          setPlainText={(n) => {
+            setName(n.toLowerCase());
+          }}
+        />
 
         <TouchableOpacity
           style={{

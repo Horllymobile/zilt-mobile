@@ -9,7 +9,7 @@ import { useSocket } from "@/shared/hooks/use-socket";
 import { socketService } from "@/shared/services/socket";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
-  ChevronLeft,
+  ArrowLeft,
   Heart,
   MessageCircle,
   MoreHorizontal,
@@ -81,7 +81,7 @@ export default function MomentDetail() {
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()}>
-              <ChevronLeft size={24} color={THEME.colors.text} />
+              <ArrowLeft size={24} color={THEME.colors.text} />
             </TouchableOpacity>
           </View>
 
@@ -101,7 +101,7 @@ export default function MomentDetail() {
               <Text style={styles.time}>{timeAgo(moment.createdAt)}</Text>
             </View>
             <TouchableOpacity style={{ marginLeft: "auto" }}>
-              <MoreHorizontal color={THEME.colors.primary} size={20} />
+              <MoreHorizontal color={THEME.colors.text} size={20} />
             </TouchableOpacity>
           </View>
 
@@ -126,7 +126,7 @@ export default function MomentDetail() {
               <Text style={styles.actionText}>{moment.likes}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionButton}>
-              <MessageCircle size={20} color="#666" />
+              <MessageCircle size={20} color={THEME.colors.text} />
               <Text style={styles.actionText}>{moment.commentsCount}</Text>
             </TouchableOpacity>
           </View>
@@ -137,7 +137,7 @@ export default function MomentDetail() {
               style={{
                 fontWeight: "600",
                 fontSize: 16,
-                color: THEME.colors.primary,
+                color: THEME.colors.text,
               }}
             >
               Comments
@@ -167,22 +167,22 @@ const styles = StyleSheet.create({
   authorText: {
     marginLeft: 12,
     justifyContent: "center",
-    color: THEME.colors.primary,
+    color: THEME.colors.text,
   },
   authorName: {
     fontSize: 16,
     fontWeight: "600",
-    color: THEME.colors.primary,
+    color: THEME.colors.text,
   },
   time: {
     fontSize: 12,
-    color: THEME.colors.primary,
+    color: THEME.colors.text,
     marginTop: 2,
   },
   content: {
     fontSize: 14,
     marginBottom: 12,
-    color: THEME.colors.primary,
+    color: THEME.colors.text,
   },
   media: {
     width: "100%",
@@ -203,10 +203,10 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 14,
-    color: THEME.colors.primary,
+    color: THEME.colors.text,
   },
   commentsSection: {
     marginTop: 12,
-    color: THEME.colors.primary,
+    color: THEME.colors.text,
   },
 });

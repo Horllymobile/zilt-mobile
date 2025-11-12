@@ -2,6 +2,8 @@ import { useAuthStore } from "@/libs/store/authStore";
 import { getColorFromString } from "@/libs/utils/colors";
 import { Profile } from "@/models/profile";
 import { COLORS } from "@/shared/constants/color";
+import { PLACEHOLDER_CONSTANTS } from "@/shared/constants/placeholders";
+import { THEME } from "@/shared/constants/theme";
 import { useCreateChatMutation } from "@/shared/services/chats/chatApi";
 import { router } from "expo-router";
 import { MessageCircle } from "lucide-react-native";
@@ -27,21 +29,14 @@ export default function PeopleItem({ person }: { person: Profile }) {
 
   const createChatMutation = useCreateChatMutation();
 
-  const onCreateChat = () => {
-    if (person && profile) {
-      createChatMutation.mutate(
-        {
-          recipientId: person?.id,
-          senderId: profile.id,
-          content: "",
+  const onChat = () => {
+    if (person) {
+      router.push({
+        pathname: `/main/(chats)/message`,
+        params: {
+          person: JSON.stringify(person),
         },
-        {
-          onSuccess: (data) => {
-            // console.log(data.data);
-            router.push(`/main/(chats)/${data.data.id}`);
-          },
-        }
-      );
+      });
     }
   };
 
@@ -57,9 +52,7 @@ export default function PeopleItem({ person }: { person: Profile }) {
         padding: 5,
         borderRadius: 0,
       }}
-      onPress={() => {
-        router.push(`/main/(chats)/${person.id}`);
-      }}
+      // onPress={() => onCreateChat()}
     >
       <View
         style={{
@@ -81,23 +74,39 @@ export default function PeopleItem({ person }: { person: Profile }) {
           }}
         >
           <Avatar
-            avatar_url={person?.avatar_url}
+            avatar_url={person?.avatar_url || PLACEHOLDER_CONSTANTS.avatar}
             style={{
-              width: 50,
-              height: 50,
+              width: 40,
+              height: 40,
               borderRadius: 25,
-              backgroundColor: getColorFromString(person.name),
+              backgroundColor: getColorFromString(person?.name ?? ""),
               overflow: "hidden",
               marginRight: 12,
               alignItems: "center",
               justifyContent: "center",
             }}
-            width={50}
-            height={50}
+            width={40}
+            height={40}
           />
           <View style={{}}>
-            <Text style={{ fontSize: 16, fontWeight: "600" }}>
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: "600",
+                color: THEME.colors.text,
+              }}
+            >
               {person?.name}
+            </Text>
+
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "600",
+                color: THEME.colors.text,
+              }}
+            >
+              {person?.distanceReadable}
             </Text>
           </View>
         </View>
@@ -106,12 +115,12 @@ export default function PeopleItem({ person }: { person: Profile }) {
           style={{
             alignSelf: "center",
             // marginTop: 10,
-            backgroundColor: "#fff",
-            //   paddingHorizontal: 20,
-            //   paddingVertical: 15,
+            // backgroundColor: THEME.colors.background,
+            paddingHorizontal: 10,
+            paddingVertical: 15,
             //   borderRadius: 15,
           }}
-          onPress={onCreateChat}
+          onPress={onChat}
         >
           <View
             style={{

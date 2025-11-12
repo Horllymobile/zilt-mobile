@@ -8,6 +8,7 @@ type EmailInputProps = {
   onBlur?: () => void;
   label: string;
   placeholder?: string;
+  error?: string;
 };
 
 export function EmailInput({
@@ -17,6 +18,7 @@ export function EmailInput({
   onBlur,
   label,
   placeholder,
+  error,
 }: EmailInputProps) {
   return (
     <View>
@@ -56,6 +58,10 @@ export function EmailInput({
             color: THEME.colors.text,
           }}
         />
+
+        {error ? (
+          <Text style={{ color: THEME.colors.error }}>{error}</Text>
+        ) : null}
       </View>
     </View>
   );

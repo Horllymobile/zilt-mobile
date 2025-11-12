@@ -69,8 +69,8 @@ export default function Settings() {
       icon: <LogOut color="red" size={24} />,
       onClick: () => {
         // console.log("Logout clicked");
-        router.replace("/(auth)/login");
         logout();
+        router.push("/(auth)/login");
       },
     },
   ];

@@ -29,5 +29,7 @@ export const THEME = {
 
     // Optional extra
     disabled: "#B0B0B0",
+
+    success: "",
   },
 };

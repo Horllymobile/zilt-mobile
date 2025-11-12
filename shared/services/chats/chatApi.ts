@@ -16,7 +16,7 @@ export const useGetChatsQuery = (enabled: boolean) => {
   });
 };
 
-export const useGetChatQuery = (chatId?: string) => {
+export const useGetChatQuery = (enabled: boolean, chatId?: string) => {
   return useQuery({
     queryKey: ["chat"],
     queryFn: async () => {
@@ -24,7 +24,7 @@ export const useGetChatQuery = (chatId?: string) => {
       console.log(resp);
       return resp.data as Chat;
     },
-    enabled: !!chatId,
+    enabled: !!chatId && enabled,
   });
 };
 
