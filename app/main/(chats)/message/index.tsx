@@ -12,7 +12,6 @@ import { useSocket } from "@/shared/hooks/use-socket";
 import { useGetChatQuery } from "@/shared/services/chats/chatApi";
 // import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { File } from "expo-file-system";
-import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, usePathname, useRouter } from "expo-router";
 import { ChevronLeft, Search } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
@@ -119,19 +118,6 @@ export default function ChatMessages() {
   //     sendImage();
   //   }
   // }, [imageURL]);
-
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setImageURL(result.assets[0].uri);
-    }
-  };
 
   const unSeenMsgs = (msgs: Message[]) => {
     return msgs.filter((msg) => !msg.seen);
@@ -351,7 +337,6 @@ export default function ChatMessages() {
               imageURL={imageURL}
               message={message}
               onSend={sendMessage}
-              pickImage={pickImage}
               setImageURL={setImageURL}
               setMessage={setMessage}
             />

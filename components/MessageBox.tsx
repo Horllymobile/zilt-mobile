@@ -1,7 +1,11 @@
 import { THEME } from "@/shared/constants/theme";
-import { ImageIcon, Send, Smile, X } from "lucide-react-native";
+import * as Camera from "expo-camera";
+import * as ImagePicker from "expo-image-picker";
+import { CameraIcon, Send, Smile, X } from "lucide-react-native";
+import { useState } from "react";
 import {
   Image,
+  Modal,
   StyleSheet,
   TextInput,
   TouchableOpacity,
@@ -14,7 +18,6 @@ type MessageBoxProps = {
   setMessage: (message: string) => void;
   message: string;
   handleTyping: (typeing: string) => void;
-  pickImage: () => void;
   onSend: () => void;
 };
 
@@ -24,9 +27,41 @@ export default function MessageBox({
   message,
   setMessage,
   handleTyping,
-  pickImage,
   onSend,
 }: MessageBoxProps) {
+  const [cameraVisible, setCameraVisible] = useState(false);
+  const [permission, requestPermission] = Camera.useCameraPermissions();
+  const [cameraRef, setCameraRef] = useState<Camera.CameraView | null>(null);
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImageURL(result.assets[0].uri);
+    }
+  };
+
+  const openCamera = async () => {
+    if (!permission?.granted) {
+      const { granted } = await requestPermission();
+      if (!granted) return;
+    }
+    setCameraVisible(true);
+  };
+
+  const takePhoto = async () => {
+    if (cameraRef) {
+      const photo = await cameraRef.takePictureAsync();
+      setImageURL(photo.uri);
+      setCameraVisible(false);
+    }
+  };
+
   return (
     <View
       style={{
@@ -35,6 +70,7 @@ export default function MessageBox({
         backgroundColor: THEME.colors.surface,
       }}
     >
+      {/* --- Preview selected image --- */}
       {imageURL && (
         <View
           style={{
@@ -64,6 +100,7 @@ export default function MessageBox({
         </View>
       )}
 
+      {/* --- Message input --- */}
       <View
         style={{
           flexDirection: "row",
@@ -98,13 +135,16 @@ export default function MessageBox({
             placeholder="Message"
             placeholderTextColor={THEME.colors.text}
           />
+
+          {/* --- Camera Icon --- */}
           {message === "" && !imageURL ? (
-            <TouchableOpacity onPress={pickImage}>
-              <ImageIcon size={24} color={THEME.colors.text} />
+            <TouchableOpacity onPress={openCamera}>
+              <CameraIcon size={24} color={THEME.colors.text} />
             </TouchableOpacity>
           ) : null}
         </View>
 
+        {/* --- Send Button --- */}
         <TouchableOpacity
           style={{
             backgroundColor: THEME.colors.background,
@@ -121,63 +161,58 @@ export default function MessageBox({
           <Send color={THEME.colors.text} size={20} />
         </TouchableOpacity>
       </View>
+
+      {/* --- Camera Modal --- */}
+      <Modal visible={cameraVisible} animationType="slide">
+        <View style={{ flex: 1, backgroundColor: "black" }}>
+          <Camera.CameraView
+            style={{ flex: 1 }}
+            ref={(ref) => setCameraRef(ref)}
+          />
+          <View
+            style={{
+              position: "absolute",
+              bottom: 50,
+              width: "100%",
+              flexDirection: "row",
+              justifyContent: "center",
+              gap: 20,
+            }}
+          >
+            <TouchableOpacity
+              onPress={() => setCameraVisible(false)}
+              style={{
+                backgroundColor: "rgba(255,255,255,0.3)",
+                padding: 12,
+                borderRadius: 30,
+              }}
+            >
+              <X size={28} color="white" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={takePhoto}
+              style={{
+                backgroundColor: "white",
+                width: 70,
+                height: 70,
+                borderRadius: 35,
+              }}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: THEME.colors.background,
-  },
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-  },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "500",
-  },
-  selectorContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 20,
-    marginTop: 16,
-    paddingHorizontal: 16,
-  },
-  selectorButton: {
-    width: 80,
-    height: 70,
-    borderWidth: 1,
-    padding: 16,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 16,
-  },
-  textInputWrapper: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 20,
-  },
   textInput: {
     width: "85%",
     fontSize: 14,
     borderWidth: 0,
     borderRadius: 0,
     color: THEME.colors.text,
-    // height: 30,
     paddingVertical: 10,
     paddingLeft: 8,
   },
