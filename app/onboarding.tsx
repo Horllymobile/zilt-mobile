@@ -96,7 +96,7 @@ export default function Onboarding() {
     setValue("bio", profile?.bio || "");
 
     // Then navigate if onboarded
-    if (profile.onboarded) {
+    if (profile?.onboarded) {
       router.replace("/main/(dashboard)");
     }
   }, [profile, store.session]);

@@ -5,24 +5,17 @@ import { Chat } from "@/models/chat";
 import { THEME } from "@/shared/constants/theme";
 import { socketService } from "@/shared/services/socket";
 import { router } from "expo-router";
-import { Image } from "lucide-react-native";
+import { Image, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Modal, Pressable, Text, TouchableOpacity, View } from "react-native";
 import { Avatar } from "./Avatar";
 
-export default function ChatItem({ chat }: { chat: Chat }) {
+export default function ChatRequestItem({ chat }: { chat: Chat }) {
   const { profile } = useAuthStore();
   const member = chat?.members.find((user) => user?.userId !== profile?.id);
 
-  const isMine = profile?.id === chat?.lastMessage?.senderId;
-
   const socket = socketService?.getSocket();
-  const canRead = chat?.lastMessage && !chat?.lastMessage?.seen && !isMine;
-  const readMessage = () => {
-    if (canRead && socket) {
-      socket.emit("read_message", chat.lastMessageId);
-    }
-  };
+  const [showRequestMenu, setShowRequestMenu] = useState(false);
 
   const unSeenMessages = chat.messages.filter(
     (msg) => !msg.seen && msg.senderId !== profile?.id
@@ -43,8 +36,7 @@ export default function ChatItem({ chat }: { chat: Chat }) {
     // SocketService.connect();
     if (!socket) return;
 
-    const typingEventKey = `chat:${chatId}:typing`;
-    console.log("typingEventKey", typingEventKey);
+    const eventKey = `chat:${chatId}:typing`;
 
     socket.emit("join_chat", { chatId });
 
@@ -52,13 +44,11 @@ export default function ChatItem({ chat }: { chat: Chat }) {
       // console.log("Joined Chat", roomId);
     });
 
-    socket.on(typingEventKey, ({ userId, isTyping }) => {
+    socket.on(eventKey, ({ userId, isTyping }) => {
       // console.log(`User ${userId} is typing`);
 
       setTypingUserIds((prev) => {
-        if (isTyping && userId !== profile?.id) {
-          return [...new Set([...prev, userId])];
-        }
+        if (isTyping) return [...new Set([...prev, userId])];
         return prev.filter((id) => id !== userId);
       });
     });
@@ -68,7 +58,19 @@ export default function ChatItem({ chat }: { chat: Chat }) {
     // };
   }, [socket, chatId]);
 
-  const notMyTypeings = typingUserIds.filter((id) => id !== profile?.id);
+  const handleAcceptChat = () => {
+    if (!socket) return;
+    socket.emit("accept_requests", { chatId, recipientId: profile?.id });
+    // router.dismissAll();s
+    router.replace({
+      pathname: `/main/(dashboard)`,
+    });
+  };
+
+  const handleRejectedChat = () => {
+    if (!socket) return;
+    socket.emit("reject_requests", { chatId, recipientId: profile?.id });
+  };
 
   return (
     <TouchableOpacity
@@ -80,16 +82,7 @@ export default function ChatItem({ chat }: { chat: Chat }) {
         padding: 12,
         borderRadius: 0,
       }}
-      onPress={() => {
-        readMessage();
-        router.push({
-          pathname: `/main/(chats)/message`,
-          params: {
-            person: JSON.stringify(member?.user),
-            chat: JSON.stringify(chat || undefined),
-          },
-        });
-      }}
+      onPress={() => setShowRequestMenu(true)}
     >
       {member?.user?.avatar_url ? (
         <Avatar
@@ -146,12 +139,11 @@ export default function ChatItem({ chat }: { chat: Chat }) {
               alignItems: "center",
             }}
           >
-            <Image size={18} color={THEME.colors.text} />
+            <Image size={18} />
             <Text
               style={{
                 fontSize: 12,
                 fontWeight: isNotSeen ? "600" : "200",
-                color: THEME.colors.text,
               }}
             >
               Photo
@@ -172,25 +164,12 @@ export default function ChatItem({ chat }: { chat: Chat }) {
           </Text>
         ) : undefined}
 
-        {notMyTypeings.length > 0 ? (
-          <Text
-            style={{
-              fontStyle: "italic",
-              color: THEME.colors.text,
-              fontSize: 12,
-            }}
-          >
-            Typing...
-          </Text>
-        ) : null}
-
-        {unSeenMessages.length ? (
+        {!isSender ? (
           <View
             style={{
-              width: 15,
-              height: 15,
               borderRadius: 50,
               marginTop: 4,
+              padding: 5,
               backgroundColor: THEME.colors.primary,
               alignItems: "center",
               justifyContent: "center",
@@ -200,15 +179,95 @@ export default function ChatItem({ chat }: { chat: Chat }) {
               style={{
                 fontSize: 9,
                 fontWeight: "600",
-
                 color: THEME.colors.text,
               }}
             >
-              {unSeenMessages.length}
+              Request
             </Text>
           </View>
-        ) : undefined}
+        ) : null}
       </View>
+
+      {/* Buy Coin Bottom Sheet */}
+      <Modal
+        visible={showRequestMenu}
+        allowSwipeDismissal
+        animationType="slide"
+        transparent
+        onDismiss={() => setShowRequestMenu(false)}
+        onRequestClose={() => setShowRequestMenu(false)}
+      >
+        <Pressable
+          onPress={() => setShowRequestMenu(false)}
+          style={{
+            flex: 1,
+            justifyContent: "flex-end",
+            backgroundColor: "rgba(0,0,0,0.4)",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: THEME.colors.background,
+              padding: 20,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              justifyContent: "center",
+              position: "relative",
+            }}
+          >
+            <View style={{ gap: 10 }}>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: "600",
+                  color: THEME.colors.text,
+                  marginBottom: 10,
+                  textAlign: "center",
+                }}
+              >
+                Accept Request
+              </Text>
+
+              <Pressable
+                onPress={() => setShowRequestMenu(false)}
+                style={{ position: "absolute", top: 1, right: 5 }}
+              >
+                <X color={THEME.colors.text} />
+              </Pressable>
+            </View>
+
+            <View style={{ gap: 10, marginTop: 20 }}>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: THEME.colors.surface,
+                  padding: 15,
+                  borderRadius: 10,
+                  alignItems: "center",
+                }}
+                onPress={() => handleAcceptChat()}
+              >
+                <Text style={{ color: THEME.colors.text, fontWeight: "600" }}>
+                  Accept
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{
+                  backgroundColor: THEME.colors.error,
+                  padding: 15,
+                  borderRadius: 10,
+                  alignItems: "center",
+                }}
+                onPress={() => handleRejectedChat()}
+              >
+                <Text style={{ color: THEME.colors.text, fontWeight: "600" }}>
+                  Reject
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
     </TouchableOpacity>
   );
 }

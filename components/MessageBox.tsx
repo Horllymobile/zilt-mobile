@@ -130,6 +130,7 @@ export default function MessageBox({
               setMessage(text);
               handleTyping(text);
             }}
+            focusable={true}
             multiline
             value={message}
             placeholder="Message"

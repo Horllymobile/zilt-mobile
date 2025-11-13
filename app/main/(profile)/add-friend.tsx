@@ -46,6 +46,11 @@ export default function AddFriend() {
           person: JSON.stringify(user),
         },
       });
+      // createChatMutation.mutate({
+      //   content: "",
+      //   recipientId: user.id,
+      //   senderId: profile?.id ?? "",
+      // });
     }
   };
 

@@ -5,11 +5,10 @@ import ChatMessage from "@/components/ChatMessage";
 import MessageBox from "@/components/MessageBox";
 import { useAuthStore } from "@/libs/store/authStore";
 import { supabase } from "@/libs/superbase";
-import { Message } from "@/models/chat";
+import { Chat, Message } from "@/models/chat";
 import { Profile } from "@/models/profile";
 import { THEME } from "@/shared/constants/theme";
 import { useSocket } from "@/shared/hooks/use-socket";
-import { useGetChatQuery } from "@/shared/services/chats/chatApi";
 // import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { File } from "expo-file-system";
 import { useLocalSearchParams, usePathname, useRouter } from "expo-router";
@@ -44,19 +43,22 @@ export default function ChatMessages() {
   const pathname = usePathname();
   const { profile } = useAuthStore();
 
-  const { person } = useLocalSearchParams();
+  const { person, chat: chatItem } = useLocalSearchParams();
+
+  // console.log("chatItem", chatItem);
 
   const router = useRouter();
 
   // const chatData = JSON.parse(chat as string) as Chat;
 
   const [messages, setMessages] = useState<Message[]>([]);
+  const [chat, setChat] = useState<Chat | undefined>(
+    chatItem ? JSON.parse(chatItem as string) : undefined
+  );
 
-  const { data: chat } = useGetChatQuery(false);
-  const chatId = chat?.id;
+  // const { data: chat } = useGetChatQuery(false);
+  const [chatId, setChatId] = useState(chat?.id);
   const member = JSON.parse(person as any) as Profile;
-
-  console.log("MEMBER", member);
 
   // const navigation = useNavigation<ChatScreenNav>();
 
@@ -134,50 +136,70 @@ export default function ChatMessages() {
 
   useEffect(() => {
     // SocketService.connect();
+
     if (!socket) return;
 
-    const eventKey = `chat:${chatId}:typing`;
+    const typingEventKey = `chat:${chatId}:typing`;
 
-    // socket.emit("join_chat", { chatId });
-
-    socket.emit("get_messages", { chatId, page: 1, size: 10 });
-    socket.on("messages", (msgs: Message[]) => {
-      // console.log(msgs[1]?.media);
-      setMessages(msgs);
-
-      // console.log(msgs);
-
-      if (msgs?.length) {
-        const unseens = unSeenMsgs(msgs);
-
-        // console.log("unSeenMsgs", unseens);
-
-        unseens.forEach((msg) => {
-          if (msg && profile?.id !== msg?.senderId) {
-            readMessage(msg.id);
-          }
-        });
-      }
+    socket.on("chat", (chat: Chat) => {
+      // console.log("Got Chat", chat);
+      setChat(chat);
+      setChatId(chat?.id);
     });
 
-    // socket.on("chat:joined", ({ roomId, userId }) => {
-    //   console.log("Joined Chat", roomId);
-    // });
+    if (chatId) {
+      socket.emit("join_chat", { chatId });
 
-    socket.on(eventKey, ({ userId, isTyping }) => {
-      console.log(`User ${userId} is typing`);
-
-      setTypingUserIds((prev) => {
-        if (isTyping) return [...new Set([...prev, userId])];
-        return prev.filter((id) => id !== userId);
+      socket.emit("get_messages", {
+        chatId,
+        page: 1,
+        size: 10,
+        members: [profile?.id, member.id],
       });
-    });
+
+      socket.on("messages", (msgs: Message[]) => {
+        setMessages(msgs);
+
+        if (msgs?.length) {
+          const unseens = unSeenMsgs(msgs);
+
+          unseens.forEach((msg) => {
+            if (msg && profile?.id !== msg?.senderId) {
+              readMessage(msg.id);
+            }
+          });
+        }
+      });
+
+      socket.on("chat:joined", ({ roomId }) => {
+        console.log("Joined Chat", roomId);
+      });
+
+      socket.on("chat", (chat: Chat) => {
+        console.log("Got Chat", chat);
+        setChat(chat);
+      });
+
+      socket.on(typingEventKey, ({ userId, isTyping }) => {
+        console.log(`User ${userId} is typing`);
+
+        // console.log("Am I typing", userId === profile?.id);
+        setTypingUserIds((prev) => {
+          if (isTyping && userId !== profile?.id) {
+            return [...new Set([...prev, userId])];
+          }
+          return prev.filter((id) => id !== userId);
+        });
+      });
+    }
 
     return () => {
       socket.off("messages");
-      // socket.off(eventKey);
+      socket.off("chat");
+      // socket.off("chat:joined");
+      // socket.off(typingEventKey);
     };
-  }, [socket, chatId]);
+  }, [socket, chat]);
 
   const [isTyping, setIsTyping] = useState(false);
   const typingTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -187,6 +209,7 @@ export default function ChatMessages() {
 
     // user started typing
     if (!isTyping) {
+      console.log("handleTyping");
       setIsTyping(true);
       socket.emit("typing", { chatId, isTyping: true });
     }
@@ -221,6 +244,10 @@ export default function ChatMessages() {
   // if (!chat) {
   //   return <LoaderActivity />;
   // }
+
+  const isMe = member.id === profile?.id;
+
+  const notMyTypeings = typingUserIds.filter((id) => id !== profile?.id);
 
   return (
     <SafeAreaView
@@ -288,7 +315,7 @@ export default function ChatMessages() {
                   >
                     {member.name}
                   </Text>
-                  {typingUserIds.length > 0 && (
+                  {notMyTypeings.length > 0 ? (
                     <Text
                       style={{
                         fontStyle: "italic",
@@ -298,7 +325,7 @@ export default function ChatMessages() {
                     >
                       Typing...
                     </Text>
-                  )}
+                  ) : null}
                 </View>
               </Pressable>
 
@@ -333,7 +360,7 @@ export default function ChatMessages() {
 
             {/* ✅ Floating input section */}
             <MessageBox
-              handleTyping={handleTyping}
+              handleTyping={(typing) => handleTyping(typing)}
               imageURL={imageURL}
               message={message}
               onSend={sendMessage}

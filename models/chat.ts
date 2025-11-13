@@ -6,8 +6,10 @@ export interface Chat {
   isGroup: boolean;
   lastMessageId: string;
   createdAt: string;
+  createdBy: string;
   updatedAt: string;
   members: Member[];
+  status: string;
   lastMessage: Message;
   messages: Message[];
 }

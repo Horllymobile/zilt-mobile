@@ -10,6 +10,7 @@ export default function MainLayout() {
     if (!session || !session.refresh || !session.expiresIn) return;
 
     const refreshToken = async () => {
+      console.log("Checking for refresh");
       try {
         const data = await refreshAccessToken(session.refresh);
         if (!data) {

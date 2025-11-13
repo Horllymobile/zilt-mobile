@@ -2,7 +2,7 @@ import { useAuthStore } from "@/libs/store/authStore";
 import { timeAgo } from "@/libs/utils/lib";
 import { Message } from "@/models/chat";
 import { THEME } from "@/shared/constants/theme";
-import { Eye, EyeOff } from "lucide-react-native";
+import { Eye } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Dimensions, Image, Text, View } from "react-native";
 
@@ -89,7 +89,9 @@ export default function ChatMessage({ message }: { message: Message }) {
             {message.seen ? (
               <Eye color={THEME.colors.text} size={12} />
             ) : (
-              <EyeOff color={THEME.colors.text} size={12} />
+              <Text style={{ fontSize: 12, color: THEME.colors.text }}>
+                Sent
+              </Text>
             )}
           </>
         ) : null}
