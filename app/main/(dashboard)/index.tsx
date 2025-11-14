@@ -1,13 +1,25 @@
 "use client";
 import SearchBar from "@/components/SearchBar";
+import { updateChatStatus } from "@/db/chat.service";
+import {
+  saveMessage,
+  updateMessageSeenStatus,
+  updateMessageStatus,
+} from "@/db/message.service";
+import { getOutboxMessages, removeOutboxMessage } from "@/db/outbox.service";
 import { useAuthStore } from "@/libs/store/authStore";
-import { Chat, Message } from "@/models/chat";
+import { useChatStore } from "@/libs/store/chatStore";
+import { useMessageStore } from "@/libs/store/messageStore";
+import { MessageDto } from "@/models/chat";
+import { IMessageResp } from "@/models/message";
 import { THEME } from "@/shared/constants/theme";
+import useLoadChats from "@/shared/hooks/use-loadchat";
 import { useSocket } from "@/shared/hooks/use-socket";
 import { useRouter } from "expo-router";
 import { MessageCirclePlus } from "lucide-react-native";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect } from "react";
 import {
+  Alert,
   Dimensions,
   StyleSheet,
   Text,
@@ -15,9 +27,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { SceneMap } from "react-native-tab-view";
 import InboxPage from "../(chats)/inbox";
-import Requests from "../(chats)/requests";
 
 const initialLayout = {
   width: Dimensions.get("window").width,
@@ -30,24 +40,136 @@ export default function Index() {
   const socket = useSocket();
   const { width } = Dimensions.get("window");
 
-  const [chats, setChats] = useState<Chat[]>([]);
-  const [chatRequests, setChatRequests] = useState<Chat[]>([]);
   const { profile, session } = useAuthStore();
+  useLoadChats(profile?.id ?? "");
   const router = useRouter();
 
-  const [unseenChats, setUnseenChats] = useState(0);
-  const [unseenRequests, setUnseenRequests] = useState(0);
+  const { fetching, chats, setChatData } = useChatStore();
+  const { setMessageData } = useMessageStore();
 
-  const [index, setIndex] = useState(0);
-  const [routes, setRoutes] = useState<Route[]>([
-    { key: "inbox", title: "Inbox" },
-    { key: "requests", title: "Requests" },
-  ]);
+  const handleDeliveredMessages = async (res: {
+    messageId: string;
+    chatId: string;
+  }) => {
+    try {
+      console.log("Handle Delivered Messages", res);
+      await removeOutboxMessage(res.messageId);
+      const success = await updateMessageStatus(res.messageId, "DELIVERED");
 
-  const renderScene = SceneMap({
-    inbox: InboxPage,
-    requests: Requests,
-  });
+      if (success) {
+        setChatData({
+          fetching: false,
+          refetch: true,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleSendingMessages = async (res: {
+    messageId: string;
+    chatId: string;
+  }) => {
+    try {
+      console.log("Handle Sent Messages", res);
+      // await updateMessageStatus(res.messageId, "SENDING");
+      // await updateOutxoxStatus(res.messageId, "SENDING");
+      setChatData({
+        fetching: false,
+        refetch: true,
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleAcceptedChat = async (chatId: string) => {
+    console.log("Handle Accepted Chat", chatId);
+    try {
+      const success = await updateChatStatus(chatId, "ACCEPTED");
+
+      if (success) {
+        console.log("Updated Chat", chatId);
+        setChatData({
+          fetching: false,
+          refetch: true,
+        });
+      }
+    } catch (error) {
+      Alert.alert(`Can't accept request now try again letter`);
+    }
+  };
+
+  const handleRejectedChat = async (chatId: string) => {
+    console.log("Handle Rejected Chat ", chatId);
+    try {
+      const success = await updateChatStatus(chatId, "REJECTED");
+      if (success) {
+        console.log("Updated Chat", chatId);
+        setChatData({
+          fetching: false,
+          refetch: true,
+        });
+      }
+    } catch (error) {
+      Alert.alert(`Can't reject request now try again letter`);
+    }
+  };
+
+  const handleNewMessages = async (res: IMessageResp) => {
+    // console.log("Handle Recieved Chats", res);
+
+    try {
+      const msg = await saveMessage({
+        chatId: res.chatId,
+        recipient: res.recipient,
+        sender: res.sender,
+        status: "DELIVERED",
+        content: res.content.trim(),
+        media: res.media ? res.media : [],
+        messageId: res.messageId,
+      });
+
+      if (msg) {
+        socket?.emit("message:device_delivered", {
+          chatId: msg?.chatId,
+          messageId: msg?.msgId,
+          senderId: res.sender.id,
+        });
+
+        setChatData({
+          fetching: false,
+          refetch: true,
+        });
+
+        setMessageData({
+          refetch: true,
+          fetching: false,
+          chatId: msg.chatId,
+        });
+      }
+    } catch (error) {
+      console.log("HandleNew Messages Error", error);
+    }
+  };
+
+  const handleReadMessage = async (res: string) => {
+    // console.log("Handle Recieved Chats", res);
+    try {
+      await updateMessageStatus(res, "SEEN");
+      const msg = await updateMessageSeenStatus(res);
+
+      if (msg) {
+        setChatData({
+          fetching: false,
+          refetch: true,
+        });
+      }
+    } catch (error) {
+      console.log("HandleNew Messages Error", error);
+    }
+  };
 
   useEffect(() => {
     if (!profile && !session) return;
@@ -60,64 +182,43 @@ export default function Index() {
   useEffect(() => {
     if (!socket) return;
 
-    socket.emit("get_chats", { page: 1, size: 20 });
-    socket.emit("get_chat_requests", { page: 1, size: 20 });
+    // socket.emit("get_chats", { page: 1, size: 10 });
 
-    const handleChats = (res: any) => setChats(res?.data);
-    const handleRequests = (res: any) => setChatRequests(res?.data);
+    socket.on("message:new", handleNewMessages);
+    socket.on("message:read", handleReadMessage);
+    socket.on("message:sending", handleSendingMessages);
+    socket.on("message:delivered", handleDeliveredMessages);
 
-    socket.on("chats", handleChats);
-    socket.on("requests", handleRequests);
+    socket.on("chat:accepted", handleAcceptedChat);
+    socket.on("chat:rejected", handleRejectedChat);
 
     return () => {
-      socket.off("chats", handleChats);
-      socket.off("requests", handleRequests);
+      // socket.off("message:new");
+      // socket.off("message:delivered");
+      // socket.off("chat:accepted");
+      // socket.off("message:sent");
+      // socket.off("chat:rejected");
     };
   }, [socket]);
 
-  const unSeenMsgs = (msgs: Message[]) => {
-    return msgs.filter((msg) => !msg.seen);
+  const getAllOutboxAndResent = async () => {
+    const msgs = await getOutboxMessages("SENDING");
+    msgs.forEach((msg) => {
+      const payload: MessageDto = {
+        chatId: msg.chatId ?? "",
+        messageId: msg.localId ?? "",
+        senderId: msg.senderId ?? "",
+        recipientId: msg?.recipientId ?? "",
+        content: msg.content ?? "",
+        media: msg.media || JSON.stringify("[]"),
+      };
+
+      // 4️⃣ Emit to socket
+      if (socket) {
+        socket.emit("send_message", payload);
+      }
+    });
   };
-
-  // 🧮 Compute unseen counts for current user
-  const unseenChatsCount = useMemo(() => {
-    if (!profile || !chats?.length) return 0;
-    return chats.filter((chat) => {
-      const lastMessage = chat.lastMessage;
-      if (!lastMessage) return false;
-
-      // If message is not sent by current user and not seen by them
-      return lastMessage.senderId !== profile.id && !lastMessage.seen;
-    }).length;
-  }, [chats, profile]);
-
-  const unseenRequestsCount = useMemo(() => {
-    if (!profile || !chatRequests?.length) return 0;
-    // Assuming request is unseen if current user hasn't accepted or viewed it
-    return chatRequests.filter(
-      (req) =>
-        !req.members.some(
-          (m) => m.userId === profile.id && req.status === "ACTIVE"
-        )
-    ).length;
-  }, [chatRequests, profile]);
-
-  // 🧱 Update tab titles dynamically with counts
-  useEffect(() => {
-    setRoutes([
-      {
-        key: "inbox",
-        title: unseenChatsCount > 0 ? `Inbox (${unseenChatsCount})` : "Inbox",
-      },
-      {
-        key: "requests",
-        title:
-          unseenRequestsCount > 0
-            ? `Requests (${unseenRequestsCount})`
-            : "Requests",
-      },
-    ]);
-  }, [unseenChatsCount, unseenRequestsCount]);
 
   return (
     <SafeAreaView
@@ -161,7 +262,16 @@ export default function Index() {
         placeholder={"Search messages or users"}
       />
 
-      <InboxPage />
+      <InboxPage
+        refetchChat={() =>
+          setChatData({
+            fetching: false,
+            refetch: true,
+          })
+        }
+        isLoading={fetching}
+        chats={chats}
+      />
 
       {/* Tab View */}
       {/* <TabView

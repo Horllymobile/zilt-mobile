@@ -1,25 +1,45 @@
+import { updateChatStatus } from "@/db/chat.service";
 import { useAuthStore } from "@/libs/store/authStore";
+import { useChatStore } from "@/libs/store/chatStore";
 import { getColorFromString } from "@/libs/utils/colors";
 import { timeAgo } from "@/libs/utils/lib";
-import { Chat } from "@/models/chat";
+import { ILocalChat } from "@/models/local-chat";
 import { THEME } from "@/shared/constants/theme";
 import { socketService } from "@/shared/services/socket";
 import { router } from "expo-router";
 import { Image, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
-import { Modal, Pressable, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Modal,
+  Pressable,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Avatar } from "./Avatar";
 
-export default function ChatRequestItem({ chat }: { chat: Chat }) {
+export default function ChatRequestItem({
+  chat,
+  refetchChat,
+}: {
+  chat: ILocalChat;
+  refetchChat: () => void;
+}) {
   const { profile } = useAuthStore();
-  const member = chat?.members.find((user) => user?.userId !== profile?.id);
+  const member = chat?.chat_members.find(
+    (user) => user?.userId !== profile?.id
+  )?.profile;
+
+  const { setChatData } = useChatStore();
 
   const socket = socketService?.getSocket();
   const [showRequestMenu, setShowRequestMenu] = useState(false);
 
-  const unSeenMessages = chat.messages.filter(
-    (msg) => !msg.seen && msg.senderId !== profile?.id
-  );
+  const unSeenMessages =
+    chat?.messages?.filter(
+      (msg) => !msg.seen && msg.senderId !== profile?.id
+    ) || [];
 
   const isNotSeen =
     chat?.lastMessage?.senderId !== profile?.id && !chat?.lastMessage?.seen;
@@ -49,7 +69,7 @@ export default function ChatRequestItem({ chat }: { chat: Chat }) {
 
       setTypingUserIds((prev) => {
         if (isTyping) return [...new Set([...prev, userId])];
-        return prev.filter((id) => id !== userId);
+        return prev?.filter((id) => id !== userId);
       });
     });
 
@@ -58,19 +78,49 @@ export default function ChatRequestItem({ chat }: { chat: Chat }) {
     // };
   }, [socket, chatId]);
 
-  const handleAcceptChat = () => {
+  const handleAcceptChat = async () => {
     if (!socket) return;
-    socket.emit("accept_requests", { chatId, recipientId: profile?.id });
-    // router.dismissAll();s
-    router.replace({
-      pathname: `/main/(dashboard)`,
-    });
+
+    try {
+      const acceptChat = await updateChatStatus(chatId, "ACCEPTED");
+
+      if (acceptChat) {
+        setShowRequestMenu(false);
+        socket.emit("accept_requests", { chatId, recipientId: member?.id });
+        refetchChat();
+        router.replace({
+          pathname: `/main/(dashboard)`,
+        });
+      }
+    } catch (error) {
+      Alert.alert(`Can't accept request now try again letter`);
+    }
   };
 
-  const handleRejectedChat = () => {
+  const handleRejectedChat = async () => {
     if (!socket) return;
-    socket.emit("reject_requests", { chatId, recipientId: profile?.id });
+
+    try {
+      const rejectChat = await updateChatStatus(chatId, "REJECT");
+
+      if (rejectChat) {
+        setShowRequestMenu(false);
+        socket.emit("reject_requests", { chatId, recipientId: profile?.id });
+        // router.dismissAll();
+        refetchChat();
+        router.replace({
+          pathname: `/main/(dashboard)`,
+        });
+      }
+    } catch (error) {
+      Alert.alert(`Can't accept request now try again letter`);
+    }
+    // if (!socket) return;
+    // socket.emit("reject_requests", { chatId, recipientId: profile?.id });
   };
+
+  const chatMedia = JSON.parse(chat?.lastMessage?.media || "[]");
+  console.log("Chat Media", chatMedia);
 
   return (
     <TouchableOpacity
@@ -84,25 +134,25 @@ export default function ChatRequestItem({ chat }: { chat: Chat }) {
       }}
       onPress={() => setShowRequestMenu(true)}
     >
-      {member?.user?.avatar_url ? (
+      {member?.avatar ? (
         <Avatar
           style={{
             width: 50,
             height: 50,
             borderRadius: 25,
-            backgroundColor: getColorFromString(member?.user?.name),
+            backgroundColor: getColorFromString(member?.name),
             overflow: "hidden",
             marginRight: 12,
             alignItems: "center",
             justifyContent: "center",
           }}
-          avatar_url={member?.user?.avatar_url}
+          avatar_url={member?.avatar}
           width={50}
           height={50}
         />
       ) : undefined}
       <View style={{ flex: 1 }}>
-        {member?.user?.name ? (
+        {member?.name ? (
           <Text
             style={{
               fontSize: 16,
@@ -110,7 +160,7 @@ export default function ChatRequestItem({ chat }: { chat: Chat }) {
               color: THEME.colors.text,
             }}
           >
-            {member?.user?.name}
+            {member?.name}
           </Text>
         ) : undefined}
 
@@ -129,7 +179,7 @@ export default function ChatRequestItem({ chat }: { chat: Chat }) {
           </Text>
         ) : undefined}
 
-        {chat?.lastMessage?.media?.length ? (
+        {chatMedia.length > 0 ? (
           <View
             style={{
               display: "flex",
@@ -139,10 +189,11 @@ export default function ChatRequestItem({ chat }: { chat: Chat }) {
               alignItems: "center",
             }}
           >
-            <Image size={18} />
+            <Image size={18} color={THEME.colors.text} />
             <Text
               style={{
                 fontSize: 12,
+                color: THEME.colors.text,
                 fontWeight: isNotSeen ? "600" : "200",
               }}
             >
@@ -160,7 +211,7 @@ export default function ChatRequestItem({ chat }: { chat: Chat }) {
               marginLeft: 8,
             }}
           >
-            {timeAgo(chat.lastMessage?.createdAt)}
+            {timeAgo(new Date(chat.lastMessage?.createdAt).toISOString())}
           </Text>
         ) : undefined}
 
@@ -225,7 +276,7 @@ export default function ChatRequestItem({ chat }: { chat: Chat }) {
                   textAlign: "center",
                 }}
               >
-                Accept Request
+                A New Message Request
               </Text>
 
               <Pressable

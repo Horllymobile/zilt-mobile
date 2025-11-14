@@ -39,8 +39,9 @@ export interface Message {
 
 export interface MessageDto {
   chatId: string;
+  messageId: string;
   senderId: string;
   recipientId: string;
   content?: string;
-  media?: string[];
+  media?: string;
 }

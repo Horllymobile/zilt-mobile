@@ -1,23 +1,26 @@
 import { useAuthStore } from "@/libs/store/authStore";
 import { timeAgo } from "@/libs/utils/lib";
-import { Message } from "@/models/chat";
+import { ILocalMessage } from "@/models/local-chat";
 import { THEME } from "@/shared/constants/theme";
-import { Eye } from "lucide-react-native";
+import { CheckCheck } from "lucide-react-native";
 import { useEffect, useState } from "react";
-import { Dimensions, Image, Text, View } from "react-native";
+import { ActivityIndicator, Dimensions, Image, Text, View } from "react-native";
 
 const { width: screenWidth } = Dimensions.get("window");
 
-export default function ChatMessage({ message }: { message: Message }) {
+export default function ChatMessage({ message }: { message: ILocalMessage }) {
   const { profile } = useAuthStore();
   const isSender = message?.senderId === profile?.id;
   const [imageSize, setImageSize] = useState<{ width: number; height: number }>(
     { width: 0, height: 0 }
   );
 
+  const media = JSON.parse(message.media) || [];
+  // console.log("media", media);
   useEffect(() => {
-    if (message?.media?.[0]) {
-      Image.getSize(message.media[0], (width, height) => {
+    if (media.length) {
+      console.log("media", media);
+      Image.getSize(media[0], (width, height) => {
         const maxWidth = screenWidth * 0.7; // max width 70% of screen
         const maxHeight = 400; // max height limit
         let newWidth = width;
@@ -36,7 +39,7 @@ export default function ChatMessage({ message }: { message: Message }) {
         setImageSize({ width: newWidth, height: newHeight });
       });
     }
-  }, [message?.media]);
+  }, [media]);
 
   return (
     <View
@@ -52,9 +55,9 @@ export default function ChatMessage({ message }: { message: Message }) {
         maxWidth: "75%",
       }}
     >
-      {message?.media?.length > 0 && message.media[0] && (
+      {media?.length > 0 && media[0] && (
         <Image
-          source={{ uri: message.media[0] }}
+          source={{ uri: media[0] }}
           style={{
             width: imageSize.width,
             height: imageSize.height,
@@ -86,13 +89,17 @@ export default function ChatMessage({ message }: { message: Message }) {
       >
         {isSender ? (
           <>
-            {message.seen ? (
-              <Eye color={THEME.colors.text} size={12} />
-            ) : (
-              <Text style={{ fontSize: 12, color: THEME.colors.text }}>
-                Sent
-              </Text>
-            )}
+            {message.status === "SENDING" ? (
+              <ActivityIndicator size={"small"} color={THEME.colors.text} />
+            ) : null}
+
+            {message.status === "DELIVERED" ? (
+              <CheckCheck size={12} color={THEME.colors.text} />
+            ) : null}
+
+            {message.status === "SEEN" ? (
+              <CheckCheck size={12} color={"green"} />
+            ) : null}
           </>
         ) : null}
         <Text
@@ -102,7 +109,7 @@ export default function ChatMessage({ message }: { message: Message }) {
             marginLeft: 4,
           }}
         >
-          {timeAgo(message.createdAt)}
+          {timeAgo(new Date(message.createdAt).toISOString())}
         </Text>
       </View>
     </View>

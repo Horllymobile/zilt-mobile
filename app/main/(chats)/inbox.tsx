@@ -3,42 +3,30 @@ import ChatRequestItem from "@/components/ChatRequestItem";
 import ChatSkeletonList from "@/components/ChatSkeletonList";
 import EmptyState from "@/components/EmptyState";
 import { useAuthStore } from "@/libs/store/authStore";
-import { Chat } from "@/models/chat";
-import { IApiResponse } from "@/models/response";
+import { ILocalChat } from "@/models/local-chat";
 import { THEME } from "@/shared/constants/theme";
 import { useSocket } from "@/shared/hooks/use-socket";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useRouter } from "expo-router";
 import { MessageCirclePlus } from "lucide-react-native";
-import { useEffect, useState } from "react";
 import { FlatList, ScrollView, TouchableOpacity, View } from "react-native";
 
-export default function InboxPage() {
+export default function InboxPage({
+  isLoading,
+  chats,
+  refetchChat,
+}: {
+  isLoading: boolean;
+  chats?: ILocalChat[];
+  refetchChat: () => void;
+}) {
   const { profile } = useAuthStore();
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
   const socket = useSocket();
-  const [isLoading, setIsLoading] = useState(true);
+  // const [isLoading, setIsLoading] = useState(true);
 
-  const [chats, setChats] = useState<Chat[]>([]);
-
-  const handleChats = (res: IApiResponse<Chat[]>) => {
-    console.log("Handle Chats", res);
-    setChats(res?.data);
-    setIsLoading(false);
-  };
-
-  useEffect(() => {
-    if (!socket) return;
-
-    socket.emit("get_chats", { page: 1, size: 10 });
-
-    socket.on("chats", handleChats);
-
-    return () => {
-      socket.off("chats", handleChats);
-    };
-  }, [socket]);
+  // const [chats, setChats] = useState<any[]>([]);
 
   return (
     <>
@@ -46,18 +34,19 @@ export default function InboxPage() {
         <ScrollView style={{ flex: 1 }}>
           <ChatSkeletonList items={8} />
         </ScrollView>
-      ) : chats?.length > 0 ? (
+      ) : chats && chats?.length > 0 ? (
         <FlatList
           data={chats}
           keyExtractor={(chat) => chat.id}
           renderItem={({ item }) => {
-            if (item.status === "ACTIVE") return <ChatItem chat={item} />;
+            if (item.status === "ACCEPTED") return <ChatItem chat={item} />;
             else if (
               item.status === "PENDING" &&
               profile?.id === item.createdBy
             )
               return <ChatItem chat={item} />;
-            else return <ChatRequestItem chat={item} />;
+            else
+              return <ChatRequestItem refetchChat={refetchChat} chat={item} />;
           }}
           contentContainerStyle={{
             paddingHorizontal: 10,

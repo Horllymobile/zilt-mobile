@@ -3,11 +3,26 @@
 import { Avatar } from "@/components/Avatar";
 import ChatMessage from "@/components/ChatMessage";
 import MessageBox from "@/components/MessageBox";
+import { updateChatStatus } from "@/db/chat.service";
+import {
+  generateChatId,
+  saveMessage,
+  updateMessageSeenStatus,
+  updateMessageStatus,
+} from "@/db/message.service";
+import {
+  removeOutboxMessage,
+  saveOutboxMessage,
+  updateOutxoxStatus,
+} from "@/db/outbox.service";
 import { useAuthStore } from "@/libs/store/authStore";
+import { useChatStore } from "@/libs/store/chatStore";
+import { useMessageStore } from "@/libs/store/messageStore";
 import { supabase } from "@/libs/superbase";
-import { Chat, Message } from "@/models/chat";
-import { Profile } from "@/models/profile";
+import { MessageDto } from "@/models/chat";
+import { ILocalChatProfile } from "@/models/local-chat";
 import { THEME } from "@/shared/constants/theme";
+import useLoadMessages from "@/shared/hooks/use-chat-messages";
 import { useSocket } from "@/shared/hooks/use-socket";
 // import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { File } from "expo-file-system";
@@ -39,35 +54,198 @@ export type RootStackParamList = {
 
 export default function ChatMessages() {
   const { width } = Dimensions.get("window");
+  const socket = useSocket();
 
   const pathname = usePathname();
   const { profile } = useAuthStore();
 
-  const { person, chat: chatItem } = useLocalSearchParams();
+  const { person, chatId } = useLocalSearchParams();
 
   // console.log("chatItem", chatItem);
 
   const router = useRouter();
 
-  // const chatData = JSON.parse(chat as string) as Chat;
+  const { setChatData } = useChatStore();
+  const {
+    messages,
+    setMessageData,
+    chatId: storeChatId,
+    chat,
+  } = useMessageStore();
 
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [chat, setChat] = useState<Chat | undefined>(
-    chatItem ? JSON.parse(chatItem as string) : undefined
+  const [currentChatId, setCurrentChatId] = useState(
+    (chatId as string) || storeChatId || chat?.id
   );
 
+  useLoadMessages(currentChatId ?? "");
+
   // const { data: chat } = useGetChatQuery(false);
-  const [chatId, setChatId] = useState(chat?.id);
-  const member = JSON.parse(person as any) as Profile;
+  const member = JSON.parse(person as any) as ILocalChatProfile;
 
   // const navigation = useNavigation<ChatScreenNav>();
 
   const viewShotRef = useRef<ViewShot | null>(null);
 
-  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  // const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!messages?.length) return;
+
+    messages.forEach(async (msg) => {
+      if (msg.status === "SENDING" && !msg.seen) {
+        console.log("Messages Changes", msg);
+        socket?.emit("read_message", msg.id);
+        await updateMessageSeenStatus(msg.id);
+        await updateMessageStatus(msg.id, "DELIVERED");
+        setMessageData({
+          refetch: true,
+          fetching: false,
+        });
+      }
+    });
+  }, [messages]);
 
   const [message, setMessage] = useState("");
   const [imageURL, setImageURL] = useState("");
+
+  const isMine = profile?.id === chat?.lastMessage?.senderId;
+
+  const canRead = chat?.lastMessage && !chat?.lastMessage?.seen && !isMine;
+
+  const handleReadMessage = async (res: string) => {
+    try {
+      await updateMessageStatus(res, "SEEN");
+      const msg = await updateMessageSeenStatus(res);
+
+      if (currentChatId) {
+        console.log(`${profile?.name} Saved message`, msg);
+        setChatData({
+          fetching: false,
+          refetch: true,
+        });
+        setMessageData({
+          fetching: false,
+          refetch: true,
+        });
+      }
+    } catch (error) {
+      console.log("HandleNew Messages Error", error);
+    }
+  };
+
+  const handleAcceptedChat = async (chatId: string) => {
+    console.log("Handle Accepted Chat", chatId);
+    try {
+      await updateChatStatus(chatId, "ACCEPTED");
+
+      setChatData({ refetch: true, fetching: false });
+      setMessageData({
+        fetching: false,
+        refetch: true,
+      });
+    } catch (error) {
+      // Alert.alert(`Can't accept request now try again letter`);
+    }
+  };
+
+  const handleRejectedChat = async (chatId: string) => {
+    try {
+      await updateChatStatus(chatId, "REJECTED");
+      setChatData({ refetch: true, fetching: false });
+      setMessageData({
+        fetching: false,
+        refetch: true,
+      });
+    } catch (error) {
+      Alert.alert(`Can't accept request now try again letter`);
+    }
+  };
+
+  const handleDeliveredMessages = async (res: {
+    messageId: string;
+    chatId: string;
+  }) => {
+    try {
+      console.log("Handle Delivered Messages", res);
+      await removeOutboxMessage(res.messageId);
+      const succuess = await updateMessageStatus(res.messageId, "DELIVERED");
+      console.log("Delivered", succuess);
+      if (succuess) {
+        setMessageData({
+          fetching: false,
+          refetch: true,
+        });
+        setChatData({
+          fetching: false,
+          refetch: true,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleSendingMessages = async (res: {
+    messageId: string;
+    chatId: string;
+  }) => {
+    try {
+      console.log("Handle Sent Messages", res);
+
+      await updateOutxoxStatus(res.messageId, "SENDING");
+      const success = await updateMessageStatus(res.messageId, "SENDING");
+
+      if (success) {
+        setMessageData({
+          fetching: false,
+          refetch: true,
+        });
+        setChatData({
+          fetching: false,
+          refetch: true,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    if (!socket) return;
+
+    // socket.emit("get_chats", { page: 1, size: 10 });
+
+    // socket.on("message:new", handleNewMessages);
+    socket.on("message:read", handleReadMessage);
+    socket.on("message:delivered", handleDeliveredMessages);
+    socket.on("message:sending", handleSendingMessages);
+
+    socket.on("chat:accepted", handleAcceptedChat);
+    socket.on("chat:rejected", handleRejectedChat);
+
+    const typingEventKey = `chat:${chatId}:typing`;
+
+    socket.emit("join_chat", { chatId });
+
+    socket.on("chat:joined", ({ roomId, userId }) => {
+      console.log(`User ${userId} Joined Chat`, roomId);
+    });
+
+    console.log("Typing Event Key", typingEventKey);
+    const room = `chat:${chatId}`;
+    socket.on(typingEventKey, ({ userId, isTyping }) => {
+      console.log(`User ${userId} is typing`);
+
+      setTypingUserIds((prev) => {
+        if (isTyping && userId !== profile?.id) {
+          return [...new Set([...prev, userId])];
+        }
+        return prev.filter((id) => id !== userId);
+      });
+    });
+
+    return () => {};
+  }, [socket]);
 
   const handleCapture = async () => {
     try {
@@ -90,7 +268,6 @@ export default function ChatMessages() {
     const uint8Array = new Uint8Array(buff);
     const filePath = `messages/ZiltChat-${Date.now()}.jpg`;
 
-    // setIsUploading(true);
     const { data, error } = await supabase.storage
       .from("ZiltStorage")
       .upload(filePath, uint8Array, {
@@ -109,97 +286,17 @@ export default function ChatMessages() {
       .from("ZiltStorage")
       .getPublicUrl(filePath);
 
-    console.log(publicUrl);
-    // setIsUploading(false);
-    // setImageURL(publicUrl.publicUrl);
     return publicUrl.publicUrl;
   };
 
-  // useEffect(() => {
-  //   if (imageURL) {
-  //     sendImage();
-  //   }
-  // }, [imageURL]);
-
-  const unSeenMsgs = (msgs: Message[]) => {
-    return msgs.filter((msg) => !msg.seen);
-  };
-
-  const socket = useSocket();
   const readMessage = (msgId: string) => {
-    if (msgId) {
+    if (msgId && canRead) {
+      console.log("");
       socket?.emit("read_message", msgId);
     }
   };
 
   const [typingUserIds, setTypingUserIds] = useState<string[]>([]);
-
-  useEffect(() => {
-    // SocketService.connect();
-
-    if (!socket) return;
-
-    const typingEventKey = `chat:${chatId}:typing`;
-
-    socket.on("chat", (chat: Chat) => {
-      // console.log("Got Chat", chat);
-      setChat(chat);
-      setChatId(chat?.id);
-    });
-
-    if (chatId) {
-      socket.emit("join_chat", { chatId });
-
-      socket.emit("get_messages", {
-        chatId,
-        page: 1,
-        size: 10,
-        members: [profile?.id, member.id],
-      });
-
-      socket.on("messages", (msgs: Message[]) => {
-        setMessages(msgs);
-
-        if (msgs?.length) {
-          const unseens = unSeenMsgs(msgs);
-
-          unseens.forEach((msg) => {
-            if (msg && profile?.id !== msg?.senderId) {
-              readMessage(msg.id);
-            }
-          });
-        }
-      });
-
-      socket.on("chat:joined", ({ roomId }) => {
-        console.log("Joined Chat", roomId);
-      });
-
-      socket.on("chat", (chat: Chat) => {
-        console.log("Got Chat", chat);
-        setChat(chat);
-      });
-
-      socket.on(typingEventKey, ({ userId, isTyping }) => {
-        console.log(`User ${userId} is typing`);
-
-        // console.log("Am I typing", userId === profile?.id);
-        setTypingUserIds((prev) => {
-          if (isTyping && userId !== profile?.id) {
-            return [...new Set([...prev, userId])];
-          }
-          return prev.filter((id) => id !== userId);
-        });
-      });
-    }
-
-    return () => {
-      socket.off("messages");
-      socket.off("chat");
-      // socket.off("chat:joined");
-      // socket.off(typingEventKey);
-    };
-  }, [socket, chat]);
 
   const [isTyping, setIsTyping] = useState(false);
   const typingTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -209,9 +306,8 @@ export default function ChatMessages() {
 
     // user started typing
     if (!isTyping) {
-      console.log("handleTyping");
       setIsTyping(true);
-      socket.emit("typing", { chatId, isTyping: true });
+      socket.emit("typing", { chatId: currentChatId.id, isTyping: true });
     }
 
     // clear any existing timeout
@@ -220,32 +316,82 @@ export default function ChatMessages() {
     // if no typing for 1.5s, mark as stopped
     typingTimeout.current = setTimeout(() => {
       setIsTyping(false);
-      socket.emit("typing", { chatId, isTyping: false });
+      socket.emit("typing", { chatId: currentChatId.id, isTyping: false });
     }, 1000) as any;
   };
 
   const sendMessage = async () => {
-    const url = imageURL ? await onImageLoaded(imageURL) : "";
-    if (message.trim() || url) {
-      if (socket) {
-        socket.emit("send_message", {
+    try {
+      if (!profile) return;
+
+      const chatId = generateChatId(profile.id, member.id);
+      const image = imageURL ? await onImageLoaded(imageURL) : "";
+      const content = message.trim();
+
+      if (!content && !image) return;
+
+      // 1️⃣ Save message locally
+      const saved = await saveMessage({
+        chatId,
+        sender: {
+          id: profile.id,
+          name: profile.name,
+          avatar: profile.avatar || profile.avatar_url || "",
+        },
+        recipient: {
+          id: member.id,
+          name: member.name,
+          avatar: member.avatar_url || "",
+        },
+        content,
+        media: image ? [image] : [],
+      });
+
+      console.log("Saved", saved);
+
+      // IMPORTANT: saved.msgId must exist
+      const localMessageId = saved?.msgId;
+
+      if (localMessageId) {
+        // 2️⃣ Save to outbox BEFORE sending
+        await saveOutboxMessage({
+          localId: localMessageId ?? "",
           chatId,
-          senderId: profile?.id ?? "",
-          recipientId: member?.id ?? "",
-          content: message.trim(),
-          media: url ? [url] : [],
+          senderId: profile.id,
+          content,
+          media: image ? JSON.stringify([image]) : undefined,
         });
+
+        // 3️⃣ Build the payload to send to server
+        const payload: MessageDto = {
+          chatId,
+          messageId: localMessageId ?? "",
+          senderId: profile.id,
+          recipientId: member.id,
+          content,
+          media: image ? JSON.stringify([image]) : undefined,
+        };
+
+        // 4️⃣ Emit to socket
+        if (socket) {
+          socket.emit("send_message", payload);
+          // 5️⃣ Reset UI inputs
+          setMessage("");
+          setImageURL("");
+          setChatData({
+            fetching: false,
+            refetch: true,
+          });
+          setMessageData({
+            fetching: false,
+            refetch: true,
+          });
+        }
       }
-      setMessage("");
-      setImageURL("");
+    } catch (error) {
+      console.warn("sendMessage error:", error);
     }
   };
-
-  // if (!chat) {
-  //   return <LoaderActivity />;
-  // }
-
-  const isMe = member.id === profile?.id;
 
   const notMyTypeings = typingUserIds.filter((id) => id !== profile?.id);
 
@@ -288,7 +434,7 @@ export default function ChatMessages() {
                   <ChevronLeft color={THEME.colors.text} size={24} />
                 </TouchableOpacity>
 
-                {member?.avatar_url && (
+                {(member?.avatar || member.avatar_url) && (
                   <Avatar
                     style={{
                       width: 50,
@@ -299,7 +445,7 @@ export default function ChatMessages() {
                       alignItems: "center",
                       justifyContent: "center",
                     }}
-                    avatar_url={member?.avatar_url}
+                    avatar_url={member.avatar || member.avatar_url || ""}
                     width={40}
                     height={40}
                   />

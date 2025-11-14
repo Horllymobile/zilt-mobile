@@ -99,6 +99,14 @@ export const useVerifyOTPMutation = () => {
 
       console.log(resp.data);
 
+      const profile = resp.data.profile;
+
+      // saveProfile({
+      //   id: profile.id,
+      //   avatar: profile.avatar_url,
+      //   name: profile.name,
+      // });
+
       // if (resp?.data?.profile?.onboarded === false) {
       //   router.replace("/onboarding");
       // } else {
@@ -193,7 +201,7 @@ export const useFindFriendQuery = (enabled: boolean, name: string) => {
       const resp = (await axiosBaseQuery(
         authEndpoints.findFriend(name)
       )) as IApiResponse<Profile>;
-      console.log(resp);
+      // console.log(resp);
       return resp;
     },
     enabled: Boolean(enabled && name),
